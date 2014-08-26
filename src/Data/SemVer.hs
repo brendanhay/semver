@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE OverloadedStrings  #-}
 {-# LANGUAGE RecordWildCards    #-}
-{-# LANGUAGE ViewPatterns       #-}
 
 -- Module      : Data.SemVer
 -- Copyright   : (c) 2014 Brendan Hay <brendan.g.hay@gmail.com>
@@ -260,7 +259,7 @@ toDelimitedBuilder Delimiters{..} Version{..} =
     <> f _delimRelease _versionRelease
     <> f _delimMeta    _versionMeta
   where
-    f (Build.singleton -> x) = foldr' (mappend . mappend x . g) mempty
+    f x = foldr' (mappend . mappend (Build.singleton x) . g) mempty
 
     g (INum  n) = Build.decimal  n
     g (IText t) = Build.fromText t
