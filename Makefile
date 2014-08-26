@@ -1,5 +1,7 @@
 SHELL := /usr/bin/env bash
 
+.PHONY: test
+
 build:
 	cabal build -j
 

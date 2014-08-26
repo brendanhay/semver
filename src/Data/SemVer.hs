@@ -59,11 +59,12 @@ module Data.SemVer
     , delimitedParser
     ) where
 
-import           Data.Function              (on)
 import           Control.Applicative
+import           Control.DeepSeq
 import           Control.Monad
 import           Data.Attoparsec.Text
 import           Data.Foldable              (foldr')
+import           Data.Function              (on)
 import           Data.Monoid
 import           Data.Text                  (Text)
 import qualified Data.Text.Lazy             as LText
@@ -85,6 +86,10 @@ instance Ord Identifier where
         (INum  _, _)       -> LT
         (IText _, _)       -> GT
 
+instance NFData Identifier where
+    rnf (INum  n) = rnf n
+    rnf (IText t) = rnf t
+
 data Version = Version
     { _versionMajor   :: !Int
     , _versionMinor   :: !Int
@@ -104,6 +109,14 @@ instance Ord Version where
             , _versionMinor
             , _versionPatch
             ]
+
+instance NFData Version where
+    rnf Version{..} =
+              rnf _versionMajor
+        `seq` rnf _versionMinor
+        `seq` rnf _versionPatch
+        `seq` rnf _versionRelease
+        `seq` rnf _versionMeta
 
 versionMajor :: Functor f => (Int -> f Int) -> Version -> f Version
 versionMajor f x = (\y -> x { _versionMajor = y }) <$> f (_versionMajor x)
