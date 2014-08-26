@@ -1,7 +1,8 @@
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
-{-# LANGUAGE ViewPatterns      #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE RecordWildCards    #-}
+{-# LANGUAGE ViewPatterns       #-}
 
 -- Module      : Data.SemVer
 -- Copyright   : (c) 2014 Brendan Hay <brendan.g.hay@gmail.com>
@@ -70,13 +71,14 @@ import qualified Data.Text.Lazy             as LText
 import           Data.Text.Lazy.Builder     (Builder)
 import qualified Data.Text.Lazy.Builder     as Build
 import qualified Data.Text.Lazy.Builder.Int as Build
+import           Data.Typeable              (Typeable)
 import           GHC.Generics
 import           Prelude                    hiding (takeWhile)
 
 data Identifier
     = INum  !Integer
     | IText Text
-      deriving (Eq, Read, Show, Generic)
+      deriving (Eq, Read, Show, Generic, Typeable)
 
 instance Ord Identifier where
     compare a b = case (a, b) of
@@ -95,7 +97,7 @@ data Version = Version
     , _versionPatch   :: !Int
     , _versionRelease :: [Identifier]
     , _versionMeta    :: [Identifier]
-    } deriving (Eq, Read, Show, Generic)
+    } deriving (Eq, Read, Show, Generic, Typeable)
 
 defaultVersion :: Version
 defaultVersion = Version 0 0 0 [] []
@@ -149,7 +151,7 @@ data Delimiters = Delimiters
     , _delimRelease :: !Char
     , _delimMeta    :: !Char
     , _delimIdent   :: !Char
-    } deriving (Eq, Ord, Read, Show, Generic)
+    } deriving (Eq, Ord, Read, Show, Generic, Typeable)
 
 defaultDelimiters :: Delimiters
 defaultDelimiters = Delimiters
