@@ -15,23 +15,22 @@
 
 module Data.SemVer
     (
-    -- * Types
-    -- ** Version
+    -- * Version
       Identifier (..)
     , Version    (..)
-    -- *** Default constructor
+    -- ** Default constructor
     , defaultVersion
-    -- *** Lenses
+    -- ** Lenses
     , versionMajor
     , versionMinor
     , versionPatch
     , versionRelease
     , versionMeta
 
-    -- ** Delimiters
+    -- * Delimiters
     , Delimiters (..)
-    -- *** Default constructor
-    -- *** Lenses
+    -- ** Default constructor
+    -- ** Lenses
     , delimMinor
     , delimPatch
     , delimRelease
@@ -54,7 +53,7 @@ module Data.SemVer
 
     -- * Deserialising
     , fromText
-    -- ** Attoparsec parser
+    -- ** Attoparsec
     , parser
     , delimitedParser
     ) where
