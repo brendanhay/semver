@@ -202,7 +202,6 @@ incrementMajor v = v
     , _versionMinor = 0
     , _versionPatch = 0
     }
-{-# INLINE incrementMajor #-}
 
 -- | Minor version Y (x.Y.z | x > 0) MUST be incremented if new, backwards
 -- compatible functionality is introduced to the public API.
@@ -220,7 +219,6 @@ incrementMinor v = v
     { _versionMinor = _versionMinor v + 1
     , _versionPatch = 0
     }
-{-# INLINE incrementMinor #-}
 
 -- | Patch version Z (x.y.Z | x > 0) MUST be incremented if only backwards
 -- compatible bug fixes are introduced.
@@ -230,7 +228,6 @@ incrementPatch :: Version -> Version
 incrementPatch v = v
     { _versionPatch = _versionPatch v + 1
     }
-{-# INLINE incrementPatch #-}
 
 -- | Major version zero (0.y.z) is for initial development.
 --
@@ -239,7 +236,6 @@ incrementPatch v = v
 -- The public API should not be considered stable.
 isDevelopment :: Version -> Bool
 isDevelopment = (== 0) . _versionMajor
-{-# INLINE isDevelopment #-}
 
 -- | Version 1.0.0 defines the public API.
 --
@@ -247,7 +243,6 @@ isDevelopment = (== 0) . _versionMajor
 -- dependent on this public API and how it changes.
 isPublic :: Version -> Bool
 isPublic = (>= 1) . _versionMajor
-{-# INLINE isPublic #-}
 
 toText :: Version -> Text
 toText = LText.toStrict . Build.toLazyText . toBuilder
