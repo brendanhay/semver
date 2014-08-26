@@ -74,7 +74,7 @@ import           GHC.Generics
 import           Prelude                    hiding (takeWhile)
 
 data Identifier
-    = INum  Integer
+    = INum  !Integer
     | IText Text
       deriving (Eq, Read, Show, Generic)
 
