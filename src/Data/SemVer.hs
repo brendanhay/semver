@@ -161,6 +161,14 @@ defaultDelimiters = Delimiters
     , _delimIdent   = '.'
     }
 
+instance NFData Delimiters where
+    rnf Delimiters{..} =
+              rnf _delimMinor
+        `seq` rnf _delimPatch
+        `seq` rnf _delimRelease
+        `seq` rnf _delimMeta
+        `seq` rnf _delimIdent
+
 delimMinor :: Functor f => (Char -> f Char) -> Delimiters -> f Delimiters
 delimMinor f x = (\y -> x { _delimMinor = y }) <$> f (_delimMinor x)
 {-# INLINE delimMinor #-}
