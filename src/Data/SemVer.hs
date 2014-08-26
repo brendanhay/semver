@@ -77,7 +77,7 @@ import           Prelude                    hiding (takeWhile)
 
 data Identifier
     = INum  !Integer
-    | IText Text
+    | IText !Text
       deriving (Eq, Read, Show, Generic, Typeable)
 
 instance Ord Identifier where
