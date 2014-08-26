@@ -12,6 +12,9 @@ install: cabal.sandbox.config
 cabal.sandbox.config:
 	cabal sandbox init
 
+test:
+	cabal install --enable-tests
+
 clean:
 	cabal clean
 	rm -f cabal.sandbox.config .cabal-sandbox
