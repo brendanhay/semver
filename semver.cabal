@@ -1,6 +1,6 @@
 name:                  semver
 version:               0.1.0.0
-synopsis:              Representation and manipulation of semantic versions
+synopsis:              Representation, manipulation, and de/serialisation of semantic versions.
 homepage:              https://github.com/brendanhay/semver
 license:               MPL-2.0
 license-file:          LICENSE
@@ -13,7 +13,9 @@ extra-source-files:    README.md
 cabal-version:         >= 1.10
 
 description:
-    Pending
+    Representation, manipulation, and de/serialisation of semantic versions.
+    .
+    For more information see: <http://semver.org/spec/v2.0.0.html>
 
 source-repository head
     type:     git
