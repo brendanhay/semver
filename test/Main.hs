@@ -50,7 +50,7 @@ main = defaultMain $ testGroup "tests"
         , testCase "1.0.0-alpha < 1.0.0-alpha.1" $
             true (sv100alpha < sv100alpha1)
 
-        , testCase "1.0.0-alpha < 1.0.0-alpha.1" $
+        , testCase "1.2.3+sha.2ac < 1.2.3-beta.1+sha.exp.dc2" $
             true (sv123sha2ac < sv123beta1shaexpdc2)
         ]
     ]
