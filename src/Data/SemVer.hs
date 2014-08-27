@@ -63,8 +63,8 @@ import           Control.DeepSeq
 import           Control.Monad
 import           Data.Attoparsec.Text
 import           Data.Char
-import           Data.Foldable              (foldr')
 import           Data.Function              (on)
+import           Data.List                  (intersperse)
 import           Data.Monoid
 import           Data.String
 import           Data.Text                  (Text)
@@ -266,10 +266,13 @@ toDelimitedBuilder Delimiters{..} Version{..} =
     <> f _delimRelease _versionRelease
     <> f _delimMeta    _versionMeta
   where
-    f x = foldr' (mappend . mappend (Build.singleton x) . g) mempty
+    f _ [] = mempty
+    f c xs = Build.singleton c <> mconcat (intersperse d (map g xs))
 
     g (INum  n) = Build.decimal  n
     g (IText t) = Build.fromText t
+
+    d = Build.singleton _delimIdent
 
 fromText :: Text -> Either String Version
 fromText = parseOnly parser

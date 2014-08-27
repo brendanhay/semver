@@ -12,9 +12,10 @@
 
 module Main (main) where
 
-import Data.List        (sort)
+import Control.Applicative
+import Data.List           (sort)
 import Data.SemVer
-import Data.Text        (Text, unpack)
+import Data.Text           (Text, unpack)
 import Test.Tasty
 import Test.Tasty.HUnit
 
@@ -22,18 +23,17 @@ main :: IO ()
 main = defaultMain $ testGroup "tests"
     [ testGroup "serialisation"
         [ testGroup "isomorphisms"
-            [ iso sv000
-            , iso sv000
-            , iso sv100
-            , iso sv100alpha
-            , iso sv100alpha1
-            , iso sv101
-            , iso sv110
-            , iso sv200
-            , iso sv210
-            , iso sv211
-            , iso sv123sha2ac
-            , iso sv123beta1shaexpdc2
+            [ iso "0.0.0"
+            , iso "1.0.0"
+            , iso "1.0.0-alpha"
+            , iso "1.0.0-alpha.1"
+            , iso "1.0.1"
+            , iso "1.1.0"
+            , iso "2.0.0"
+            , iso "2.1.0"
+            , iso "2.1.1"
+            , iso "1.2.3+sha.2ac"
+            , iso "1.2.3-beta.1+sha.exp.dc2"
             ]
         ]
 
@@ -55,8 +55,8 @@ main = defaultMain $ testGroup "tests"
         ]
     ]
 
-iso :: Version -> TestTree
-iso v = let n = toText v in testCase (unpack n) (Right v @=? fromText n)
+iso :: Text -> TestTree
+iso t = testCase (unpack t) (Right t @=? (toText <$> fromText t))
 
 true :: Bool -> Assertion
 true = (True @=?)
