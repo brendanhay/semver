@@ -58,5 +58,6 @@ test-suite semver-test
     build-depends:
           base
         , semver
-        , tasty            >= 0.8
-        , tasty-quickcheck >= 0.8
+        , tasty       >= 0.8
+        , tasty-hunit >= 0.8
+        , text

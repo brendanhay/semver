@@ -12,20 +12,68 @@
 
 module Main (main) where
 
-import Control.Applicative
-import Data.Int
-import Data.List             (intercalate)
-import Data.Maybe            (fromMaybe)
-import Data.Text             (Text)
-import Data.Word
-import Test.Tasty
-import Test.Tasty.QuickCheck
-import Text.Printf
+import Data.List        (sort)
 import Data.SemVer
+import Data.Text        (Text, unpack)
+import Test.Tasty
+import Test.Tasty.HUnit
 
 main :: IO ()
 main = defaultMain $ testGroup "tests"
-    [ testGroup "encoding"   []
-    , testGroup "parsing"    []
-    , testGroup "precedence" []
+    [ testGroup "serialisation"
+        [ testGroup "isomorphisms"
+            [ iso sv000
+            , iso sv000
+            , iso sv100
+            , iso sv100alpha
+            , iso sv100alpha1
+            , iso sv101
+            , iso sv110
+            , iso sv200
+            , iso sv210
+            , iso sv211
+            , iso sv123sha2ac
+            , iso sv123beta1shaexpdc2
+            ]
+        ]
+
+    , testGroup "precedence"
+        [ testCase "0.0.0 < 1.0.0 < 1.0.1 < 1.1.0" $
+            [sv000, sv100, sv101, sv110] @=? sort [sv101, sv110, sv100, sv000]
+
+        , testCase "1.0.0 < 2.0.0" $
+            true (sv100 < sv200)
+
+        , testCase "1.0.0 < 1.0.0-alpha" $
+            true (sv100 < sv100alpha)
+
+        , testCase "1.0.0-alpha < 1.0.0-alpha.1" $
+            true (sv100alpha < sv100alpha1)
+
+        , testCase "1.0.0-alpha < 1.0.0-alpha.1" $
+            true (sv123sha2ac < sv123beta1shaexpdc2)
+        ]
     ]
+
+iso :: Version -> TestTree
+iso v = let n = toText v in testCase (unpack n) (Right v @=? fromText n)
+
+true :: Bool -> Assertion
+true = (True @=?)
+
+sv000               = defaultVersion
+sv100               = sv "1.0.0"
+sv100alpha          = sv "1.0.0-alpha"
+sv100alpha1         = sv "1.0.0-alpha.1"
+sv101               = sv "1.0.1"
+sv110               = sv "1.1.0"
+sv200               = sv "2.0.0"
+sv210               = sv "2.1.0"
+sv211               = sv "2.1.1"
+sv123sha2ac         = sv "1.2.3+sha.2ac"
+sv123beta1shaexpdc2 = sv "1.2.3-beta.1+sha.exp.dc2"
+
+sv :: Text -> Version
+sv t = case fromText t of
+    Left  e -> error e
+    Right x -> x
