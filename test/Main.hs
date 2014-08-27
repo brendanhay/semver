@@ -61,6 +61,8 @@ iso t = testCase (unpack t) (Right t @=? (toText <$> fromText t))
 true :: Bool -> Assertion
 true = (True @=?)
 
+sv000, sv100, sv100alpha, sv100alpha1, sv101   :: Version
+sv110, sv200, sv123sha2ac, sv123beta1shaexpdc2 :: Version
 sv000               = defaultVersion
 sv100               = sv "1.0.0"
 sv100alpha          = sv "1.0.0-alpha"
@@ -68,8 +70,6 @@ sv100alpha1         = sv "1.0.0-alpha.1"
 sv101               = sv "1.0.1"
 sv110               = sv "1.1.0"
 sv200               = sv "2.0.0"
-sv210               = sv "2.1.0"
-sv211               = sv "2.1.1"
 sv123sha2ac         = sv "1.2.3+sha.2ac"
 sv123beta1shaexpdc2 = sv "1.2.3-beta.1+sha.exp.dc2"
 

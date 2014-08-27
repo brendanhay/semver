@@ -114,7 +114,8 @@ main = defaultMain
         ]
     ]
 
-sv123, sv123alpha, sv123alpha1, sv123123, sv123sha2ac, sv123beta1shaexpdc2 :: Version
+sv123, sv123alpha, sv123alpha1, sv123123 :: Version
+sv123sha2ac, sv123beta1shaexpdc2         :: Version
 sv123               = sv "1.2.3"
 sv123alpha          = sv "1.2.3-alpha"
 sv123alpha1         = sv "1.2.3-alpha.1"
@@ -122,7 +123,8 @@ sv123123            = sv "1.2.3+123"
 sv123sha2ac         = sv "1.2.3+sha.2ac"
 sv123beta1shaexpdc2 = sv "1.2.3-beta.1+sha.exp.dc2"
 
-dv123, dv123alpha, dv123alpha1, dv123123, dv123sha2ac, dv123beta1shaexpdc2 :: Ver.Version
+dv123, dv123alpha, dv123alpha1, dv123123 :: Ver.Version
+dv123sha2ac, dv123beta1shaexpdc2         :: Ver.Version
 dv123               = dv "1.2.3"
 dv123alpha          = dv "1.2.3-alpha"
 dv123alpha1         = dv "1.2.3-alpha.1"
