@@ -1,6 +1,6 @@
 SHELL := /usr/bin/env bash
 
-.PHONY: test
+.PHONY: bench test
 
 build:
 	cabal build -j
@@ -14,8 +14,13 @@ install: cabal.sandbox.config
 cabal.sandbox.config:
 	cabal sandbox init
 
+bench:
+	cabal install --enable-benchmarks && \
+ cabal bench --benchmark-option=-obenchmark.html
+
 test:
-	cabal install --enable-tests
+	cabal install --enable-tests && \
+ cabal test
 
 clean:
 	cabal clean

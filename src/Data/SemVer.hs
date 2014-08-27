@@ -46,12 +46,12 @@ module Data.SemVer
     , isDevelopment
     , isPublic
 
-    -- * Serialising
+    -- * Encoding
     , toText
     , toBuilder
     , toDelimitedBuilder
 
-    -- * Deserialising
+    -- * Decoding
     , fromText
     -- ** Attoparsec
     , parser
@@ -62,9 +62,11 @@ import           Control.Applicative
 import           Control.DeepSeq
 import           Control.Monad
 import           Data.Attoparsec.Text
+import           Data.Char
 import           Data.Foldable              (foldr')
 import           Data.Function              (on)
 import           Data.Monoid
+import           Data.String
 import           Data.Text                  (Text)
 import qualified Data.Text.Lazy             as LText
 import           Data.Text.Lazy.Builder     (Builder)
@@ -85,6 +87,11 @@ instance Ord Identifier where
         (IText x, IText y) -> x `compare` y
         (INum  _, _)       -> LT
         (IText _, _)       -> GT
+
+instance IsString Identifier where
+    fromString s
+        | all isDigit s = INum  (read s)
+        | otherwise     = IText (fromString s)
 
 instance NFData Identifier where
     rnf (INum  n) = rnf n
@@ -244,7 +251,7 @@ isPublic :: Version -> Bool
 isPublic = (>= 1) . _versionMajor
 
 toText :: Version -> Text
-toText = LText.toStrict . Build.toLazyText . toBuilder
+toText = LText.toStrict . Build.toLazyTextWith 14 . toBuilder
 
 toBuilder :: Version -> Builder
 toBuilder = toDelimitedBuilder defaultDelimiters

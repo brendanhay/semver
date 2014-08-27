@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 -- Module      : Main
 -- Copyright   : (c) 2014 Brendan Hay <brendan.g.hay@gmail.com>
 -- License     : This Source Code Form is subject to the terms of
@@ -8,8 +10,24 @@
 -- Stability   : experimental
 -- Portability : non-portable (GHC extensions)
 
+module Main (main) where
+
+import Control.Applicative
+import Data.Int
+import Data.List             (intercalate)
+import Data.Maybe            (fromMaybe)
+import Data.Word
+--import Test.QuickCheck
+import Test.Tasty
+import Test.Tasty.QuickCheck
+import Text.Printf
+
 main :: IO ()
-main = return ()
+main = defaultMain $ testGroup "Tests"
+    [ testGroup "Encoding" []
+    , testGroup "Parsing" []
+    , testGroup "Precedence" []
+    ]
 
 -- Precedence refers to how versions are compared to each other when
 -- ordered. Precedence MUST be calculated by separating the version into major,
