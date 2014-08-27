@@ -40,16 +40,12 @@ main = defaultMain $ testGroup "tests"
     , testGroup "precedence"
         [ testCase "0.0.0 < 1.0.0 < 1.0.1 < 1.1.0" $
             [sv000, sv100, sv101, sv110] @=? sort [sv101, sv110, sv100, sv000]
-
         , testCase "1.0.0 < 2.0.0" $
             true (sv100 < sv200)
-
         , testCase "1.0.0 < 1.0.0-alpha" $
             true (sv100 < sv100alpha)
-
         , testCase "1.0.0-alpha < 1.0.0-alpha.1" $
             true (sv100alpha < sv100alpha1)
-
         , testCase "1.2.3+sha.2ac < 1.2.3-beta.1+sha.exp.dc2" $
             true (sv123sha2ac < sv123beta1shaexpdc2)
         ]
