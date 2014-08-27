@@ -297,8 +297,12 @@ delimitedParser Delimiters{..} = Version
         return n
 
     identifiers :: Parser [Identifier]
-    identifiers = identifier `sepBy1` char _delimIdent
+    identifiers = many (num <|> text)
 
-    identifier :: Parser Identifier
-    identifier = either INum IText
-        <$> eitherP nonNegative (takeWhile1 (inClass "0-9A-Za-z-"))
+    num = INum
+        <$> nonNegative
+        <*  (void (char _delimIdent) <|> endOfInput)
+
+    text = IText
+        <$> takeWhile1 (inClass "0-9A-Za-z-")
+        <*  optional (char _delimIdent)
