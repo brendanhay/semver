@@ -48,6 +48,7 @@ module Data.SemVer
 
     -- * Encoding
     , toText
+    , toLazyText
     , toBuilder
     , toDelimitedBuilder
 
@@ -251,7 +252,10 @@ isPublic :: Version -> Bool
 isPublic = (>= 1) . _versionMajor
 
 toText :: Version -> Text
-toText = LText.toStrict . Build.toLazyTextWith 14 . toBuilder
+toText = LText.toStrict . toLazyText
+
+toLazyText :: Version -> LText.Text
+toLazyText = Build.toLazyTextWith 32 . toBuilder
 
 toBuilder :: Version -> Builder
 toBuilder = toDelimitedBuilder defaultDelimiters
@@ -288,6 +292,7 @@ delimitedParser Delimiters{..} = Version
     <*> nonNegative
     <*> option [] (try (char _delimRelease) *> identifiers)
     <*> option [] (try (char _delimMeta)    *> identifiers)
+    <*  endOfInput
   where
     nonNegative :: (Show a, Integral a) => Parser a
     nonNegative = do

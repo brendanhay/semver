@@ -16,8 +16,9 @@ import           Criterion
 import           Criterion.Main
 import           Data.List                    (sort)
 import           Data.SemVer
-import           Data.Text                    (pack, unpack)
 import           Data.Text                    (Text)
+import           Data.Text                    (pack)
+import           Data.Text.Lazy               (unpack)
 import           Data.Version                 (showVersion, parseVersion)
 import qualified Data.Version                 as Ver
 import           Text.ParserCombinators.ReadP
@@ -61,19 +62,19 @@ main = defaultMain
 
     , bgroup "encoding"
         [ bgroup "semver"
-            [ bgroup "unpack . toText"
+            [ bgroup "unpack . toLazyText"
                 [ bench "1.2.3"
-                    $ nf (unpack . toText) sv123
+                    $ nf (unpack . toLazyText) sv123
                 , bench "1.2.3-alpha"
-                    $ nf (unpack . toText) sv123alpha
+                    $ nf (unpack . toLazyText) sv123alpha
                 , bench "1.2.3-alpha.1"
-                    $ nf (unpack . toText) sv123alpha1
+                    $ nf (unpack . toLazyText) sv123alpha1
                 , bench "1.2.3+123"
-                    $ nf (unpack . toText) sv123123
+                    $ nf (unpack . toLazyText) sv123123
                 , bench "1.2.3+sha.2ac"
-                    $ nf (unpack . toText) sv123sha2ac
+                    $ nf (unpack . toLazyText) sv123sha2ac
                 , bench "1.2.3-beta.1+sha.exp.dc2"
-                    $ nf (unpack . toText) sv123beta1shaexpdc2
+                    $ nf (unpack . toLazyText) sv123beta1shaexpdc2
                 ]
             ]
         , bgroup "version"
