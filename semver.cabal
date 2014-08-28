@@ -1,6 +1,6 @@
 name:                  semver
 version:               0.1
-synopsis:              Representation, manipulation, and de/serialisation of semantic versions.
+synopsis:              Representation, manipulation, and de/serialisation of Semantic Versions.
 homepage:              https://github.com/brendanhay/semver
 license:               OtherLicense
 license-file:          LICENSE
@@ -13,7 +13,8 @@ extra-source-files:    README.md
 cabal-version:         >= 1.10
 
 description:
-    Representation, manipulation, and de/serialisation of semantic versions.
+    Representation, manipulation, and de/serialisation of a Version type
+    following the Semantic Versioning specification.
     .
     For more information see: <http://semver.org>
 
