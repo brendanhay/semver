@@ -24,7 +24,7 @@ test:
 
 clean:
 	cabal clean
-	rm -f cabal.sandbox.config .cabal-sandbox
+	rm -rf cabal.sandbox.config .cabal-sandbox benchmark.html
 
 doc:
 	cabal haddock
