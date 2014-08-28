@@ -139,7 +139,7 @@ data Version = Version
 
 -- | A default 'Version' which can be used to signify initial development.
 --
--- __Note:__ Equivalent to @0.0.0@
+-- Note: Equivalent to @0.0.0@
 defaultVersion :: Version
 defaultVersion = Version 0 0 0 [] []
 
@@ -189,7 +189,7 @@ versionMeta f x = (\y -> x { _versionMeta = y }) <$> f (_versionMeta x)
 -- | A set of delimiters used to encode/decode a 'Version' and specifyc
 -- alternative serialisation strategies.
 --
--- __Example:__ using alpha characters to encode the version as a valid
+-- Example: using alpha characters to encode the version as a valid
 -- DNS CNAME, such as:
 --
 -- @
@@ -217,7 +217,7 @@ data Delimiters = Delimiters
 
 -- | The default set of delimiters used in the semantic version specification.
 --
--- __Example:__ Given exhaustive version components would result in the
+-- Example: Given exhaustive version components would result in the
 -- following hypothetical version:
 --
 -- @
@@ -329,20 +329,20 @@ isPublic = (>= 1) . _versionMajor
 
 -- | Convert a 'Version' to it's readable 'String' representation.
 --
--- __Note:__ This is optimised for cases where you wish to use a 'String' and
+-- Note: This is optimised for cases where you wish to use a 'String' and
 -- as such is faster than the semantically equivalent @unpack . toLazyText@.
 toString :: Version -> String
 toString = toMonoid (:[]) show Text.unpack defaultDelimiters
 
 -- | Convert a 'Version' to a strict 'Text' representation.
 --
--- __Note:__ Equivalent to @toStrict . toLazyText@
+-- Note: Equivalent to @toStrict . toLazyText@
 toText :: Version -> Text
 toText = LText.toStrict . toLazyText
 
 -- | Convert a 'Version' to a 'LText.Text' representation.
 --
--- __Note:__ This uses a lower 'Builder' buffer size optimised for commonly
+-- Note: This uses a lower 'Builder' buffer size optimised for commonly
 -- found version formats. If you have particuarly long version numbers
 -- using 'toBuilder' and 'Build.toLazyTextWith' to control the buffer size
 -- is recommended.
@@ -389,7 +389,7 @@ fromText = parseOnly parser
 -- | Parse a 'Version' from 'LText.Text', returning an attoparsec error message
 -- in the 'Left' case on failure.
 --
--- __Note:__ The underlying attoparsec 'Parser' is based on 'Text' and this is
+-- Note: The underlying attoparsec 'Parser' is based on 'Text' and this is
 -- equivalent to @fromText . toStrict@
 fromLazyText :: LText.Text -> Either String Version
 fromLazyText = fromText . LText.toStrict
