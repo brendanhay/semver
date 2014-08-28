@@ -196,7 +196,7 @@ versionMeta f x = (\y -> x { _versionMeta = y }) <$> f (_versionMeta x)
 -- let Right v = fromText "1.2.3+40"
 -- let alpha   = Delimiters \'m\' \'p\' \'r\' \'d\' \'i\'
 --
--- Data.Text.Lazy.Builder.toLazyText ("app01-" <> toDelimitedBuilder alpha v <> ".dmz.internal")
+-- Data.Text.Lazy.Builder.toLazyText (\"app01-\" <> toDelimitedBuilder alpha v <> \".dmz.internal\")
 -- @
 --
 -- Would result in the following 'LText.Text':
