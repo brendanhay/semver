@@ -94,7 +94,7 @@ import           Prelude                    hiding (takeWhile)
 -- or metadata components of a 'Version'.
 --
 -- * The 'Ord' instance implements precedence according to the semantic version
--- specification, with numeric identifiers being of _lower_ precedence than
+-- specification, with numeric identifiers being of /lower/ precedence than
 -- textual identifiers, otherwise lexicographic ordering is used.
 data Identifier
     = INum  !Int
@@ -121,6 +121,7 @@ instance NFData Identifier where
 --
 -- * The 'Eq' instance represents exhaustive equality with all
 -- components considered.
+--
 -- * The 'Ord' instance implements the precedence rules from the semantic
 -- version specification with metadata ('_versionMeta') being ignored.
 data Version = Version
@@ -311,7 +312,9 @@ incrementPatch v = v
 -- | Check if the 'Version' is considered unstable.
 --
 -- * Major version zero (0.y.z) is for initial development.
+--
 -- * Anything may change at any time.
+--
 -- * The public API should not be considered stable.
 isDevelopment :: Version -> Bool
 isDevelopment = (== 0) . _versionMajor
