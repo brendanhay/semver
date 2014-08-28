@@ -13,13 +13,19 @@
 -- Stability   : experimental
 -- Portability : non-portable (GHC extensions)
 
+-- | An implementation of the Semantic Versioning specification located at
+-- <http://semver.org>.
+--
+-- A canonical 'Version' type and functions representing behaviour as outlined
+-- in the specification are defined alongside additional lenses,
+-- common manipulations, and serialisation primitives.
 module Data.SemVer
     (
     -- * Version
       Identifier (..)
     , Version    (..)
-    -- ** Default constructor
     , defaultVersion
+
     -- ** Lenses
     , versionMajor
     , versionMinor
@@ -27,9 +33,30 @@ module Data.SemVer
     , versionRelease
     , versionMeta
 
+    -- ** Incrementing
+    , incrementMajor
+    , incrementMinor
+    , incrementPatch
+
+    -- ** Predicates
+    , isDevelopment
+    , isPublic
+
+    -- ** Encoding
+    , toString
+    , toText
+    , toLazyText
+    , toBuilder
+
+    -- ** Decoding
+    , fromText
+    , fromLazyText
+    , parser
+
     -- * Delimiters
     , Delimiters (..)
-    -- ** Default constructor
+    , defaultDelimiters
+
     -- ** Lenses
     , delimMinor
     , delimPatch
@@ -37,25 +64,10 @@ module Data.SemVer
     , delimMeta
     , delimIdent
 
-    -- * Incrementing
-    , incrementMajor
-    , incrementMinor
-    , incrementPatch
-
-    -- * Predicates
-    , isDevelopment
-    , isPublic
-
-    -- * Encoding
-    , toText
-    , toLazyText
-    , toBuilder
+    -- ** Encoding
     , toDelimitedBuilder
 
-    -- * Decoding
-    , fromText
-    -- ** Attoparsec
-    , parser
+    -- ** Decoding
     , delimitedParser
     ) where
 
@@ -69,6 +81,7 @@ import           Data.List                  (intersperse)
 import           Data.Monoid
 import           Data.String
 import           Data.Text                  (Text)
+import qualified Data.Text                  as Text
 import qualified Data.Text.Lazy             as LText
 import           Data.Text.Lazy.Builder     (Builder)
 import qualified Data.Text.Lazy.Builder     as Build
@@ -77,8 +90,14 @@ import           Data.Typeable              (Typeable)
 import           GHC.Generics
 import           Prelude                    hiding (takeWhile)
 
+-- | A type representing an individual identifier from the release
+-- or metadata components of a 'Version'.
+--
+-- * The 'Ord' instance implements precedence according to the semantic version
+-- specification, with numeric identifiers being of _lower_ precedence than
+-- textual identifiers, otherwise lexicographic ordering is used.
 data Identifier
-    = INum  !Integer
+    = INum  !Int
     | IText !Text
       deriving (Eq, Read, Show, Generic, Typeable)
 
@@ -98,14 +117,28 @@ instance NFData Identifier where
     rnf (INum  n) = rnf n
     rnf (IText t) = rnf t
 
+-- | A type representing a successfully decoded or constructed semantic version.
+--
+-- * The 'Eq' instance represents exhaustive equality with all
+-- components considered.
+-- * The 'Ord' instance implements the precedence rules from the semantic
+-- version specification with metadata ('_versionMeta') being ignored.
 data Version = Version
     { _versionMajor   :: !Int
+     -- ^ The major version component.
     , _versionMinor   :: !Int
+      -- ^ The minor version component.
     , _versionPatch   :: !Int
+      -- ^ The patch level component.
     , _versionRelease :: [Identifier]
+      -- ^ A (potentially empty) list of release identifiers.
     , _versionMeta    :: [Identifier]
+      -- ^ A (potentially empty) list of metadata.
     } deriving (Eq, Read, Show, Generic, Typeable)
 
+-- | A default 'Version' which can be used to signify initial development.
+--
+-- __Note:__ Equivalent to @0.0.0@
 defaultVersion :: Version
 defaultVersion = Version 0 0 0 [] []
 
@@ -152,6 +185,27 @@ versionMeta :: Functor f
 versionMeta f x = (\y -> x { _versionMeta = y }) <$> f (_versionMeta x)
 {-# INLINE versionMeta #-}
 
+-- | A set of delimiters used to encode/decode a 'Version' and specifyc
+-- alternative serialisation strategies.
+--
+-- __Example:__ using alpha characters to encode the version as a valid
+-- DNS CNAME, such as:
+--
+-- @
+-- let Right v = fromText "1.2.3+40"
+-- let alpha   = Delimiters \'m\' \'p\' \'r\' \'d\' \'i\'
+--
+-- Data.Text.Lazy.Builder.toLazyText ("app01-" <> toDelimitedBuilder alpha v <> ".dmz.internal")
+-- @
+--
+-- Would result in the following 'LText.Text':
+--
+-- @
+-- app01-1m2p3d40.dmz.internal
+-- @
+--
+-- Using the same 'Delimiters' set with 'delimitedParser' would ensure
+-- correct decoding behaviour.
 data Delimiters = Delimiters
     { _delimMinor   :: !Char
     , _delimPatch   :: !Char
@@ -160,6 +214,14 @@ data Delimiters = Delimiters
     , _delimIdent   :: !Char
     } deriving (Eq, Ord, Read, Show, Generic, Typeable)
 
+-- | The default set of delimiters used in the semantic version specification.
+--
+-- __Example:__ Given exhaustive version components would result in the
+-- following hypothetical version:
+--
+-- @
+-- 1.2.3-alpha.1+sha.exp.12ab3d9
+-- @
 defaultDelimiters :: Delimiters
 defaultDelimiters = Delimiters
     { _delimMinor   = '.'
@@ -197,12 +259,16 @@ delimIdent :: Functor f => (Char -> f Char) -> Delimiters -> f Delimiters
 delimIdent f x = (\y -> x { _delimIdent = y }) <$> f (_delimIdent x)
 {-# INLINE delimIdent #-}
 
--- | Major version X (X.y.z | X > 0) MUST be incremented if any backwards
+-- | Increment the major component of a 'Version' by 1, resetting the minor
+-- and patch components.
+--
+-- * Major version X (X.y.z | X > 0) MUST be incremented if any backwards
 -- incompatible changes are introduced to the public API.
 --
--- It MAY include minor and patch level changes.
+-- * It MAY include minor and patch level changes.
 --
--- Patch and minor version MUST be reset to 0 when major version is incremented.
+-- * Patch and minor version MUST be reset to 0 when major version
+-- is incremented.
 incrementMajor :: Version -> Version
 incrementMajor v = v
     { _versionMajor = _versionMajor v + 1
@@ -210,81 +276,127 @@ incrementMajor v = v
     , _versionPatch = 0
     }
 
--- | Minor version Y (x.Y.z | x > 0) MUST be incremented if new, backwards
+-- | Increment the minor component of a 'Version' by 1, resetting the
+-- patch component.
+--
+-- * Minor version Y (x.Y.z | x > 0) MUST be incremented if new, backwards
 -- compatible functionality is introduced to the public API.
 --
--- It MUST be incremented if any public API functionality is marked as deprecated.
+-- * It MUST be incremented if any public API functionality is marked
+-- as deprecated.
 --
--- It MAY be incremented if substantial new functionality or improvements are
--- introduced within the private code.
+-- * It MAY be incremented if substantial new functionality or improvements
+-- are introduced within the private code.
 --
--- It MAY include patch level changes.
+-- * It MAY include patch level changes.
 --
--- Patch version MUST be reset to 0 when minor version is incremented.
+-- * Patch version MUST be reset to 0 when minor version is incremented.
 incrementMinor :: Version -> Version
 incrementMinor v = v
     { _versionMinor = _versionMinor v + 1
     , _versionPatch = 0
     }
 
--- | Patch version Z (x.y.Z | x > 0) MUST be incremented if only backwards
+-- | Increment the patch component of a 'Version' by 1.
+--
+-- * Patch version Z (x.y.Z | x > 0) MUST be incremented if only backwards
 -- compatible bug fixes are introduced.
 --
--- A bug fix is defined as an internal change that fixes incorrect behavior.
+-- * A bug fix is defined as an internal change that fixes incorrect behavior.
 incrementPatch :: Version -> Version
 incrementPatch v = v
     { _versionPatch = _versionPatch v + 1
     }
 
--- | Major version zero (0.y.z) is for initial development.
+-- | Check if the 'Version' is considered unstable.
 --
--- Anything may change at any time.
---
--- The public API should not be considered stable.
+-- * Major version zero (0.y.z) is for initial development.
+-- * Anything may change at any time.
+-- * The public API should not be considered stable.
 isDevelopment :: Version -> Bool
 isDevelopment = (== 0) . _versionMajor
 
--- | Version 1.0.0 defines the public API.
+-- | Check if the 'Version' is considered stable.
 --
--- The way in which the version number is incremented after this release is
--- dependent on this public API and how it changes.
+-- Version 1.0.0 defines the public API. The way in which the version number
+-- is incremented after this release is dependent on this public API and how
+-- it changes.
 isPublic :: Version -> Bool
 isPublic = (>= 1) . _versionMajor
 
+-- | Convert a 'Version' to it's readable 'String' representation.
+--
+-- __Note:__ This is optimised for cases where you wish to use a 'String' and
+-- as such is faster than the semantically equivalent @unpack . toLazyText@.
+toString :: Version -> String
+toString = toMonoid (:[]) show Text.unpack defaultDelimiters
+
+-- | Convert a 'Version' to a strict 'Text' representation.
+--
+-- __Note:__ Equivalent to @toStrict . toLazyText@
 toText :: Version -> Text
 toText = LText.toStrict . toLazyText
 
+-- | Convert a 'Version' to a 'LText.Text' representation.
+--
+-- __Note:__ This uses a lower 'Builder' buffer size optimised for commonly
+-- found version formats. If you have particuarly long version numbers
+-- using 'toBuilder' and 'Build.toLazyTextWith' to control the buffer size
+-- is recommended.
 toLazyText :: Version -> LText.Text
-toLazyText = Build.toLazyTextWith 32 . toBuilder
+toLazyText = Build.toLazyTextWith 24 . toBuilder
 
+-- | Convert a 'Version' to a 'Builder'.
 toBuilder :: Version -> Builder
 toBuilder = toDelimitedBuilder defaultDelimiters
 
+-- | Convert a 'Version' to a 'Builder' using the specified 'Delimiters' set.
 toDelimitedBuilder :: Delimiters -> Version -> Builder
-toDelimitedBuilder Delimiters{..} Version{..} =
-       Build.decimal   _versionMajor
-    <> Build.singleton _delimMinor
-    <> Build.decimal   _versionMinor
-    <> Build.singleton _delimPatch
-    <> Build.decimal   _versionPatch
-    <> f _delimRelease _versionRelease
-    <> f _delimMeta    _versionMeta
+toDelimitedBuilder = toMonoid Build.singleton Build.decimal Build.fromText
+
+toMonoid :: Monoid m
+         => (Char -> m)
+         -> (Int  -> m)
+         -> (Text -> m)
+         -> Delimiters
+         -> Version
+         -> m
+toMonoid del int txt Delimiters{..} Version{..} = mconcat
+     [ int _versionMajor
+     , del _delimMinor
+     , int _versionMinor
+     , del _delimPatch
+     , int _versionPatch
+     , f _delimRelease _versionRelease
+     , f _delimMeta    _versionMeta
+     ]
   where
     f _ [] = mempty
-    f c xs = Build.singleton c <> mconcat (intersperse d (map g xs))
+    f c xs = del c <> mconcat (intersperse (del _delimIdent) (map g xs))
 
-    g (INum  n) = Build.decimal  n
-    g (IText t) = Build.fromText t
+    g (INum  n) = int n
+    g (IText t) = txt t
+{-# INLINE toMonoid #-}
 
-    d = Build.singleton _delimIdent
-
+-- | Parse a 'Version' from 'Text', returning an attoparsec error message
+-- in the 'Left' case on failure.
 fromText :: Text -> Either String Version
 fromText = parseOnly parser
 
--- | A greedy attoparsec parser which requires the entire input to match.
+-- | Parse a 'Version' from 'LText.Text', returning an attoparsec error message
+-- in the 'Left' case on failure.
+--
+-- __Note:__ The underlying attoparsec 'Parser' is based on 'Text' and this is
+-- equivalent to @fromText . toStrict@
+fromLazyText :: LText.Text -> Either String Version
+fromLazyText = fromText . LText.toStrict
+
+-- | A greedy attoparsec 'Parser' which requires the entire 'Text' input to match.
 parser :: Parser Version
 parser = delimitedParser defaultDelimiters
 
+-- | A greedy attoparsec 'Parser' using the specified 'Delimiters' set
+-- which requires the entire 'Text' input to match.
 delimitedParser :: Delimiters -> Parser Version
 delimitedParser Delimiters{..} = Version
     <$> (nonNegative <* char _delimMinor)
