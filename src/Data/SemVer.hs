@@ -79,7 +79,6 @@ import           Data.Char
 import           Data.Function              (on)
 import           Data.List                  (intersperse)
 import           Data.Monoid
-import           Data.String
 import           Data.Text                  (Text)
 import qualified Data.Text                  as Text
 import qualified Data.Text.Lazy             as LText
@@ -107,11 +106,6 @@ instance Ord Identifier where
         (IText x, IText y) -> x `compare` y
         (INum  _, _)       -> LT
         (IText _, _)       -> GT
-
-instance IsString Identifier where
-    fromString s
-        | all isDigit s = INum  (read s)
-        | otherwise     = IText (fromString s)
 
 instance NFData Identifier where
     rnf (INum  n) = rnf n
