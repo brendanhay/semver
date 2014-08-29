@@ -59,7 +59,7 @@ true = (True @=?)
 
 sv000, sv100, sv100alpha, sv100alpha1, sv101   :: Version
 sv110, sv200, sv123sha2ac, sv123beta1shaexpdc2 :: Version
-sv000               = defaultVersion
+sv000               = initial
 sv100               = sv "1.0.0"
 sv100alpha          = sv "1.0.0-alpha"
 sv100alpha1         = sv "1.0.0-alpha.1"
