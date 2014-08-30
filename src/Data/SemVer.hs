@@ -1,6 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
-
 -- Module      : Data.SemVer
 -- Copyright   : (c) 2014 Brendan Hay <brendan.g.hay@gmail.com>
 -- License     : This Source Code Form is subject to the terms of
@@ -25,11 +22,11 @@ module Data.SemVer
     , version
     , initial
     -- ** Lenses
-    , versionMajor
-    , versionMinor
-    , versionPatch
-    , versionRelease
-    , versionMeta
+    , major
+    , minor
+    , patch
+    , release
+    , metadata
     -- ** Incrementing
     , incrementMajor
     , incrementMinor
@@ -55,102 +52,17 @@ module Data.SemVer
     -- ** Prisms
     , _Numeric
     , _Textual
-
-    -- * Delimiters
-    -- $delimiters
-    , Delimiters
-    -- ** Constructor
-    , delimiters
-    -- ** Lenses
-    , delimMinor
-    , delimPatch
-    , delimRelease
-    , delimMeta
-    , delimIdent
-    -- ** Encoding
-    , toDelimitedBuilder
-    -- ** Decoding
-    , delimitedParser
     ) where
 
 import           Control.Applicative
-import           Control.DeepSeq
-import           Control.Monad
 import           Data.Attoparsec.Text
-import           Data.Char
-import           Data.Function              (on)
-import           Data.List                  (intersperse)
-import           Data.Monoid
-import           Data.Text                  (Text)
-import qualified Data.Text                  as Text
-import qualified Data.Text.Lazy             as LText
-import           Data.Text.Lazy.Builder     (Builder)
-import qualified Data.Text.Lazy.Builder     as Build
-import qualified Data.Text.Lazy.Builder.Int as Build
-import           Prelude                    hiding (takeWhile)
-
--- | A type representing an individual identifier from the release
--- or metadata components of a 'Version'.
---
--- * The 'Ord' instance implements precedence according to the semantic version
--- specification, with numeric identifiers being of /lower/ precedence than
--- textual identifiers, otherwise lexicographic ordering is used.
---
--- The functions 'numeric' and 'textual' can be used to construct an 'Identifier'.
-data Identifier
-    = INum  !Int
-    | IText !Text
-      deriving (Eq, Show)
-
--- | Safely construct a numeric identifier.
-numeric :: Int -> Identifier
-numeric = INum
-{-# INLINE numeric #-}
-
--- | Construct an identifier from the given 'Text', returning 'Nothing' if
--- neither a numeric or valid textual input is supplied.
-textual :: Text -> Maybe Identifier
-textual = either (const Nothing) Just
-    . parseOnly (identifierParser endOfInput <* endOfInput)
-{-# INLINE textual #-}
-
-_Numeric :: Applicative f => (Int -> f Int) -> Identifier -> f Identifier
-_Numeric f (INum x) = INum <$> f x
-_Numeric _ x        = pure x
-{-# INLINE _Numeric #-}
-
-_Textual :: Applicative f => (Text -> f Text) -> Identifier -> f Identifier
-_Textual f (IText x) = IText <$> f x
-_Textual _ x         = pure x
-{-# INLINE _Textual #-}
-
-instance Ord Identifier where
-    compare a b = case (a, b) of
-        (INum  x, INum  y) -> x `compare` y
-        (IText x, IText y) -> x `compare` y
-        (INum  _, _)       -> LT
-        (IText _, _)       -> GT
-
-instance NFData Identifier where
-    rnf (INum  n) = rnf n
-    rnf (IText t) = rnf t
-
--- | An opaque type representing a successfully decoded or constructed
--- semantic version. See the related functions and lenses for modification and
--- update.
---
--- * The 'Eq' instance represents exhaustive equality with all
--- components considered.
---
--- * The 'Ord' instance implements the precedence rules from the semantic
--- version specification with metadata being ignored.
-data Version = Version
-    { _versionMajor   :: !Int
-    , _versionMinor   :: !Int
-    , _versionPatch   :: !Int
-    , _versionRelease :: [Identifier]
-    , _versionMeta    :: [Identifier]
-    } deriving (Eq, Show)
+import qualified Data.SemVer.Delimited  as Delim
+import           Data.SemVer.Internal
+import           Data.Text              (Text)
+import qualified Data.Text              as Text
+import qualified Data.Text.Lazy         as LText
+import           Data.Text.Lazy.Builder (Builder)
+import qualified Data.Text.Lazy.Builder as Build
 
 -- | Smart constructor fully specifying all available version components.
 version :: Int          -- ^ Major version component.
@@ -168,143 +80,36 @@ version = Version
 initial :: Version
 initial = version 0 0 0 [] []
 
-instance Ord Version where
-    compare a b = on compare versions a b <> on compare _versionRelease a b
-      where
-        versions Version{..} =
-            [ _versionMajor
-            , _versionMinor
-            , _versionPatch
-            ]
-
-instance NFData Version where
-    rnf Version{..} =
-              rnf _versionMajor
-        `seq` rnf _versionMinor
-        `seq` rnf _versionPatch
-        `seq` rnf _versionRelease
-        `seq` rnf _versionMeta
-
 -- | Lens for the major version component.
-versionMajor :: Functor f => (Int -> f Int) -> Version -> f Version
-versionMajor f x = (\y -> x { _versionMajor = y }) <$> f (_versionMajor x)
-{-# INLINE versionMajor #-}
+major :: Functor f => (Int -> f Int) -> Version -> f Version
+major f x = (\y -> x { _versionMajor = y }) <$> f (_versionMajor x)
+{-# INLINE major #-}
 
 -- | Lens for minor version component.
-versionMinor :: Functor f => (Int -> f Int) -> Version -> f Version
-versionMinor f x = (\y -> x { _versionMinor = y }) <$> f (_versionMinor x)
-{-# INLINE versionMinor #-}
+minor :: Functor f => (Int -> f Int) -> Version -> f Version
+minor f x = (\y -> x { _versionMinor = y }) <$> f (_versionMinor x)
+{-# INLINE minor #-}
 
 -- | Lens for the patch version component.
-versionPatch :: Functor f => (Int -> f Int) -> Version -> f Version
-versionPatch f x = (\y -> x { _versionPatch = y }) <$> f (_versionPatch x)
-{-# INLINE versionPatch #-}
+patch :: Functor f => (Int -> f Int) -> Version -> f Version
+patch f x = (\y -> x { _versionPatch = y }) <$> f (_versionPatch x)
+{-# INLINE patch #-}
 
 -- | Lens for the list of release identifiers.
-versionRelease :: Functor f
+release :: Functor f
                => ([Identifier] -> f [Identifier])
                -> Version
                -> f Version
-versionRelease f x = (\y -> x { _versionRelease = y }) <$> f (_versionRelease x)
-{-# INLINE versionRelease #-}
+release f x = (\y -> x { _versionRelease = y }) <$> f (_versionRelease x)
+{-# INLINE release #-}
 
 -- | Lens for the list of metadata identifiers.
-versionMeta :: Functor f
+metadata :: Functor f
             => ([Identifier] -> f [Identifier])
             -> Version
             -> f Version
-versionMeta f x = (\y -> x { _versionMeta = y }) <$> f (_versionMeta x)
-{-# INLINE versionMeta #-}
-
--- $delimiters
---
--- A set of delimiters is used to encode/decode a 'Version' and specify
--- alternative serialisation strategies.
---
--- Lenses can be used to modify the default delimiter set, as in the following
--- example - using alpha characters to encode the version as a valid
--- DNS CNAME (assuming operators from lens or lens-family-core):
---
--- @
--- let Right v = fromText "1.2.3+40"
--- let alpha = delimiters & delimMajor .~ \'m\' & delimPatch .~ \'p\' & delimRelease .~ \'r\' & delimMeta .~ \'d\' & delimIdent .~ \'i\'
---
--- Data.Text.Lazy.Builder.toLazyText (\"app01-\" <> toDelimitedBuilder alpha v <> \".dmz.internal\")
--- @
---
--- Would result in the following 'LText.Text':
---
--- @
--- app01-1m2p3d40.dmz.internal
--- @
---
--- Using the same 'Delimiters' set with 'delimitedParser' would ensure
--- correct decoding behaviour.
-
--- | An opaque set representing the seperators used to delimit semantic
--- version components.
-data Delimiters = Delimiters
-    { _delimMinor   :: !Char
-    , _delimPatch   :: !Char
-    , _delimRelease :: !Char
-    , _delimMeta    :: !Char
-    , _delimIdent   :: !Char
-    } deriving (Eq, Ord, Show)
-
--- | The default set of delimiters used in the semantic version specification.
---
--- Example: Given exhaustive version components would result in the
--- following hypothetical version:
---
--- @
--- 1.2.3-alpha.1+sha.exp.12ab3d9
--- @
-delimiters :: Delimiters
-delimiters = Delimiters
-    { _delimMinor   = '.'
-    , _delimPatch   = '.'
-    , _delimRelease = '-'
-    , _delimMeta    = '+'
-    , _delimIdent   = '.'
-    }
-
-instance NFData Delimiters where
-    rnf Delimiters{..} =
-              rnf _delimMinor
-        `seq` rnf _delimPatch
-        `seq` rnf _delimRelease
-        `seq` rnf _delimMeta
-        `seq` rnf _delimIdent
-
--- | Lens for the minor version delimiter. Default: @.@
-delimMinor :: Functor f => (Char -> f Char) -> Delimiters -> f Delimiters
-delimMinor f x = (\y -> x { _delimMinor = y }) <$> f (_delimMinor x)
-{-# INLINE delimMinor #-}
-
--- | Lens for the patch version delimiter. Default: @.@
-delimPatch :: Functor f => (Char -> f Char) -> Delimiters -> f Delimiters
-delimPatch f x = (\y -> x { _delimPatch = y }) <$> f (_delimPatch x)
-{-# INLINE delimPatch #-}
-
--- | Lens for the release component delimiter. Default: @-@
-delimRelease :: Functor f => (Char -> f Char) -> Delimiters -> f Delimiters
-delimRelease f x = (\y -> x { _delimRelease = y }) <$> f (_delimRelease x)
-{-# INLINE delimRelease #-}
-
--- | Lens for the metadata component delimiter. Default: @+@
-delimMeta :: Functor f => (Char -> f Char) -> Delimiters -> f Delimiters
-delimMeta f x = (\y -> x { _delimMeta = y }) <$> f (_delimMeta x)
-{-# INLINE delimMeta #-}
-
--- | Lens for the individual identifier delimiter. Default: @.@
-delimIdent :: Functor f => (Char -> f Char) -> Delimiters -> f Delimiters
-delimIdent f x = (\y -> x { _delimIdent = y }) <$> f (_delimIdent x)
-{-# INLINE delimIdent #-}
-
--- $increments
---
--- Mention the usage of increments to correctly adjust version components
--- according to spec.
+metadata f x = (\y -> x { _versionMeta = y }) <$> f (_versionMeta x)
+{-# INLINE metadata #-}
 
 -- | Increment the major component of a 'Version' by 1, resetting the minor
 -- and patch components.
@@ -378,7 +183,7 @@ isPublic = (>= 1) . _versionMajor
 -- Note: This is optimised for cases where you wish to use a 'String' and
 -- as such is faster than the semantically equivalent @unpack . toLazyText@.
 toString :: Version -> String
-toString = toMonoid (:[]) show Text.unpack delimiters
+toString = toMonoid (:[]) show Text.unpack Delim.semantic
 
 -- | Convert a 'Version' to a strict 'Text' representation.
 --
@@ -397,35 +202,7 @@ toLazyText = Build.toLazyTextWith 24 . toBuilder
 
 -- | Convert a 'Version' to a 'Builder'.
 toBuilder :: Version -> Builder
-toBuilder = toDelimitedBuilder delimiters
-
--- | Convert a 'Version' to a 'Builder' using the specified 'Delimiters' set.
-toDelimitedBuilder :: Delimiters -> Version -> Builder
-toDelimitedBuilder = toMonoid Build.singleton Build.decimal Build.fromText
-
-toMonoid :: Monoid m
-         => (Char -> m)
-         -> (Int  -> m)
-         -> (Text -> m)
-         -> Delimiters
-         -> Version
-         -> m
-toMonoid del int txt Delimiters{..} Version{..} = mconcat
-     [ int _versionMajor
-     , del _delimMinor
-     , int _versionMinor
-     , del _delimPatch
-     , int _versionPatch
-     , f _delimRelease _versionRelease
-     , f _delimMeta    _versionMeta
-     ]
-  where
-    f _ [] = mempty
-    f c xs = del c <> mconcat (intersperse (del _delimIdent) (map g xs))
-
-    g (INum  n) = int n
-    g (IText t) = txt t
-{-# INLINE toMonoid #-}
+toBuilder = Delim.toBuilder Delim.semantic
 
 -- | Parse a 'Version' from 'Text', returning an attoparsec error message
 -- in the 'Left' case on failure.
@@ -440,33 +217,29 @@ fromText = parseOnly parser
 fromLazyText :: LText.Text -> Either String Version
 fromLazyText = fromText . LText.toStrict
 
--- | A greedy attoparsec 'Parser' which requires the entire 'Text' input to match.
+-- | A greedy attoparsec 'Parser' which requires the entire 'Text'
+-- input to match.
 parser :: Parser Version
-parser = delimitedParser delimiters
+parser = Delim.parser Delim.semantic
 
--- | A greedy attoparsec 'Parser' using the specified 'Delimiters' set
--- which requires the entire 'Text' input to match.
-delimitedParser :: Delimiters -> Parser Version
-delimitedParser Delimiters{..} = Version
-    <$> (nonNegative <* char _delimMinor)
-    <*> (nonNegative <* char _delimPatch)
-    <*> nonNegative
-    <*> option [] (try (char _delimRelease) *> identifiers)
-    <*> option [] (try (char _delimMeta)    *> identifiers)
-    <*  endOfInput
-  where
-    identifiers :: Parser [Identifier]
-    identifiers = many (identifierParser $ void (char _delimIdent))
+-- | Safely construct a numeric identifier.
+numeric :: Int -> Identifier
+numeric = INum
+{-# INLINE numeric #-}
 
-identifierParser :: Parser () -> Parser Identifier
-identifierParser end = num <|> text
-  where
-    num  = INum  <$> nonNegative <* (end <|> endOfInput)
-    text = IText <$> takeWhile1 (inClass "0-9A-Za-z-") <* optional end
+-- | Construct an identifier from the given 'Text', returning 'Nothing' if
+-- neither a numeric or valid textual input is supplied.
+textual :: Text -> Maybe Identifier
+textual = either (const Nothing) Just
+    . parseOnly (identifierParser endOfInput <* endOfInput)
+{-# INLINE textual #-}
 
-nonNegative :: (Show a, Integral a) => Parser a
-nonNegative = do
-    n <- decimal
-    when (n < 0) $
-        fail ("Numeric value must be non-negative: " ++ show n)
-    return n
+_Numeric :: Applicative f => (Int -> f Int) -> Identifier -> f Identifier
+_Numeric f (INum x) = INum <$> f x
+_Numeric _ x        = pure x
+{-# INLINE _Numeric #-}
+
+_Textual :: Applicative f => (Text -> f Text) -> Identifier -> f Identifier
+_Textual f (IText x) = IText <$> f x
+_Textual _ x         = pure x
+{-# INLINE _Textual #-}
