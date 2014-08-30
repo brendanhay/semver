@@ -243,13 +243,13 @@ textual = either (const Nothing) (Just . IText)
     . parseOnly (textualParser endOfInput <* endOfInput)
 {-# INLINE textual #-}
 
--- | A prism into the numeric branch of an 'Identifier' sum.
+-- | A prism into the numeric branch of an 'Identifier'.
 _Numeric :: Applicative f => (Int -> f Int) -> Identifier -> f Identifier
 _Numeric f (INum x) = INum <$> f x
 _Numeric _ x        = pure x
 {-# INLINE _Numeric #-}
 
--- | A prism into the textual branch of an 'Identifier' sum.
+-- | A prism into the textual branch of an 'Identifier'.
 _Textual :: Applicative f => (Text -> f Text) -> Identifier -> f (Maybe Identifier)
 _Textual f (IText x) = textual <$> f x
 _Textual _ x         = pure (Just x)
