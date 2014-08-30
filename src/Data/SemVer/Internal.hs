@@ -81,10 +81,14 @@ instance NFData Identifier where
     rnf (IText t) = rnf t
 
 identifierParser :: Parser () -> Parser Identifier
-identifierParser end = num <|> text
-  where
-    num  = INum  <$> nonNegative <* (end <|> endOfInput)
-    text = IText <$> takeWhile1 (inClass "0-9A-Za-z-") <* optional end
+identifierParser p =
+    either INum IText <$> eitherP (numericParser p) (textualParser p)
+
+numericParser :: Parser () -> Parser Int
+numericParser p = nonNegative <* (p <|> endOfInput)
+
+textualParser :: Parser () -> Parser Text
+textualParser p = takeWhile1 (inClass "0-9A-Za-z-") <* optional p
 
 nonNegative :: (Show a, Integral a) => Parser a
 nonNegative = do

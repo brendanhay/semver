@@ -11,16 +11,31 @@
 -- Stability   : experimental
 -- Portability : non-portable (GHC extensions)
 
--- | An implementation of the Semantic Versioning specification located at
--- <http://semver.org>.
+-- | A set of delimiters can be used to encode/decode a 'Version' and specify
+-- alternative serialisation strategies.
 --
--- A canonical 'Version' type and functions representing behaviour as outlined
--- in the specification are defined alongside additional lenses, traversals,
--- common manipulations, and serialisation primitives.
+-- Lenses can be used to modify the default delimiter set, as in the following
+-- example - using alpha characters to encode the version as a valid
+-- DNS CNAME (assuming operators from lens or lens-family-core):
+--
+-- @
+-- let Right v = fromText "1.2.3+40"
+-- let alpha = semantic & major .~ \'m\' & patch .~ \'p\' & release .~ \'r\' & metadata .~ \'d\' & identifier .~ \'i\'
+--
+-- Data.Text.Lazy.Builder.toLazyText (\"app01-\" <> toDelimitedBuilder alpha v <> \".dmz.internal\")
+-- @
+--
+-- Would result in the following 'LText.Text':
+--
+-- @
+-- app01-1m2p3d40.dmz.internal
+-- @
+--
+-- Using the same 'Delimiters' set with 'delimitedParser' would ensure
+-- correct decoding behaviour.
 module Data.SemVer.Delimited
     (
     -- * Delimiters
-    -- $delimiters
       Delimiters
     -- ** Constructor
     , semantic
@@ -43,31 +58,6 @@ import           Data.SemVer.Internal
 import           Data.Text.Lazy.Builder     (Builder)
 import qualified Data.Text.Lazy.Builder     as Build
 import qualified Data.Text.Lazy.Builder.Int as Build
-
--- $delimiters
---
--- A set of delimiters is used to encode/decode a 'Version' and specify
--- alternative serialisation strategies.
---
--- Lenses can be used to modify the default delimiter set, as in the following
--- example - using alpha characters to encode the version as a valid
--- DNS CNAME (assuming operators from lens or lens-family-core):
---
--- @
--- let Right v = fromText "1.2.3+40"
--- let alpha = delimiters & major .~ \'m\' & patch .~ \'p\' & release .~ \'r\' & metadata .~ \'d\' & identifier .~ \'i\'
---
--- Data.Text.Lazy.Builder.toLazyText (\"app01-\" <> toDelimitedBuilder alpha v <> \".dmz.internal\")
--- @
---
--- Would result in the following 'LText.Text':
---
--- @
--- app01-1m2p3d40.dmz.internal
--- @
---
--- Using the same 'Delimiters' set with 'delimitedParser' would ensure
--- correct decoding behaviour.
 
 -- | The default set of delimiters used in the semantic version specification.
 --

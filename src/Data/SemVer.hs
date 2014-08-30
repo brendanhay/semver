@@ -28,6 +28,7 @@ module Data.SemVer
     , release
     , metadata
     -- ** Incrementing
+    -- $incrementing
     , incrementMajor
     , incrementMinor
     , incrementPatch
@@ -111,6 +112,14 @@ metadata :: Functor f
 metadata f x = (\y -> x { _versionMeta = y }) <$> f (_versionMeta x)
 {-# INLINE metadata #-}
 
+-- $incrementing
+--
+-- The following increment functions are used to ensure that the related
+-- version components are reset according to the specification.
+--
+-- See the individual function documentation for specifics regarding each
+-- version component.
+
 -- | Increment the major component of a 'Version' by 1, resetting the minor
 -- and patch components.
 --
@@ -180,7 +189,7 @@ isPublic = (>= 1) . _versionMajor
 
 -- | Convert a 'Version' to it's readable 'String' representation.
 --
--- Note: This is optimised for cases where you wish to use a 'String' and
+-- Note: This is optimised for cases where you require 'String' output, and
 -- as such is faster than the semantically equivalent @unpack . toLazyText@.
 toString :: Version -> String
 toString = toMonoid (:[]) show Text.unpack Delim.semantic
@@ -230,16 +239,18 @@ numeric = INum
 -- | Construct an identifier from the given 'Text', returning 'Nothing' if
 -- neither a numeric or valid textual input is supplied.
 textual :: Text -> Maybe Identifier
-textual = either (const Nothing) Just
-    . parseOnly (identifierParser endOfInput <* endOfInput)
+textual = either (const Nothing) (Just . IText)
+    . parseOnly (textualParser endOfInput <* endOfInput)
 {-# INLINE textual #-}
 
+-- | A prism into the numeric branch of an 'Identifier' sum.
 _Numeric :: Applicative f => (Int -> f Int) -> Identifier -> f Identifier
 _Numeric f (INum x) = INum <$> f x
 _Numeric _ x        = pure x
 {-# INLINE _Numeric #-}
 
-_Textual :: Applicative f => (Text -> f Text) -> Identifier -> f Identifier
-_Textual f (IText x) = IText <$> f x
-_Textual _ x         = pure x
+-- | A prism into the textual branch of an 'Identifier' sum.
+_Textual :: Applicative f => (Text -> f Text) -> Identifier -> f (Maybe Identifier)
+_Textual f (IText x) = textual <$> f x
+_Textual _ x         = pure (Just x)
 {-# INLINE _Textual #-}
