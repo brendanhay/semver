@@ -1,5 +1,5 @@
 name:                  semver
-version:               0.2.1
+version:               0.3.0
 synopsis:              Representation, manipulation, and de/serialisation of Semantic Versions.
 homepage:              https://github.com/brendanhay/semver
 license:               OtherLicense
@@ -29,6 +29,10 @@ library
 
     exposed-modules:
           Data.SemVer
+        , Data.SemVer.Delimited
+
+    other-modules:
+          Data.SemVer.Internal
 
     build-depends:
           attoparsec >= 0.10 && < 0.13
