@@ -25,14 +25,12 @@ module Data.SemVer
     , version
     , initial
     -- ** Lenses
-    -- $lenses
     , versionMajor
     , versionMinor
     , versionPatch
     , versionRelease
     , versionMeta
     -- ** Incrementing
-    -- $incrementing
     , incrementMajor
     , incrementMinor
     , incrementPatch
@@ -186,11 +184,6 @@ instance NFData Version where
         `seq` rnf _versionPatch
         `seq` rnf _versionRelease
         `seq` rnf _versionMeta
-
--- $lenses
---
--- Something about using lenses to construct versions and increments to update
--- the version components due to the modification of all version according to spec
 
 -- | Lens for the major version component.
 versionMajor :: Functor f => (Int -> f Int) -> Version -> f Version
