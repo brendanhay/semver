@@ -223,11 +223,11 @@ versionMeta f x = (\y -> x { _versionMeta = y }) <$> f (_versionMeta x)
 --
 -- Lenses can be used to modify the default delimiter set, as in the following
 -- example - using alpha characters to encode the version as a valid
--- DNS CNAME:
+-- DNS CNAME (assuming operators from lens or lens-family-core):
 --
 -- @
 -- let Right v = fromText "1.2.3+40"
--- let alpha = delimiters & delimMajor .= \'m\' & delimPatch .= \'p\' & delimRelease .= \'r\' & delimMeta .= \'d\' & delimIdent .= \'i\'
+-- let alpha = delimiters & delimMajor .~ \'m\' & delimPatch .~ \'p\' & delimRelease .~ \'r\' & delimMeta .~ \'d\' & delimIdent .~ \'i\'
 --
 -- Data.Text.Lazy.Builder.toLazyText (\"app01-\" <> toDelimitedBuilder alpha v <> \".dmz.internal\")
 -- @
