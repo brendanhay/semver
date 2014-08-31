@@ -19,7 +19,7 @@
 -- DNS CNAME (assuming operators from lens or lens-family-core):
 --
 -- @
--- let Right v = fromText "1.2.3+40"
+-- let Right v = fromText \"1.2.3+40\"
 -- let alpha = semantic & major .~ \'m\' & patch .~ \'p\' & release .~ \'r\' & metadata .~ \'d\' & identifier .~ \'i\'
 --
 -- Data.Text.Lazy.Builder.toLazyText (\"app01-\" <> toBuilder alpha v <> \".dmz.internal\")
