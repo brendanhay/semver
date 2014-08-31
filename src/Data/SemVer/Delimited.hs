@@ -22,7 +22,7 @@
 -- let Right v = fromText "1.2.3+40"
 -- let alpha = semantic & major .~ \'m\' & patch .~ \'p\' & release .~ \'r\' & metadata .~ \'d\' & identifier .~ \'i\'
 --
--- Data.Text.Lazy.Builder.toLazyText (\"app01-\" <> toDelimitedBuilder alpha v <> \".dmz.internal\")
+-- Data.Text.Lazy.Builder.toLazyText (\"app01-\" <> toBuilder alpha v <> \".dmz.internal\")
 -- @
 --
 -- Would result in the following 'LText.Text':
@@ -31,7 +31,7 @@
 -- app01-1m2p3d40.dmz.internal
 -- @
 --
--- Using the same 'Delimiters' set with 'delimitedParser' would ensure
+-- Using the same 'Delimiters' set with 'parser' would ensure
 -- correct decoding behaviour.
 module Data.SemVer.Delimited
     (
