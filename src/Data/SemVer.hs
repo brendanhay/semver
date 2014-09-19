@@ -98,17 +98,17 @@ patch f x = (\y -> x { _versionPatch = y }) <$> f (_versionPatch x)
 
 -- | Lens for the list of release identifiers.
 release :: Functor f
-               => ([Identifier] -> f [Identifier])
-               -> Version
-               -> f Version
+        => ([Identifier] -> f [Identifier])
+        -> Version
+        -> f Version
 release f x = (\y -> x { _versionRelease = y }) <$> f (_versionRelease x)
 {-# INLINE release #-}
 
 -- | Lens for the list of metadata identifiers.
 metadata :: Functor f
-            => ([Identifier] -> f [Identifier])
-            -> Version
-            -> f Version
+         => ([Identifier] -> f [Identifier])
+         -> Version
+         -> f Version
 metadata f x = (\y -> x { _versionMeta = y }) <$> f (_versionMeta x)
 {-# INLINE metadata #-}
 
@@ -136,6 +136,7 @@ incrementMajor v = v
     , _versionMinor = 0
     , _versionPatch = 0
     }
+{-# INLINE incrementMajor #-}
 
 -- | Increment the minor component of a 'Version' by 1, resetting the
 -- patch component.
@@ -157,6 +158,7 @@ incrementMinor v = v
     { _versionMinor = _versionMinor v + 1
     , _versionPatch = 0
     }
+{-# INLINE incrementMinor #-}
 
 -- | Increment the patch component of a 'Version' by 1.
 --
@@ -168,6 +170,7 @@ incrementPatch :: Version -> Version
 incrementPatch v = v
     { _versionPatch = _versionPatch v + 1
     }
+{-# INLINE incrementPatch #-}
 
 -- | Check if the 'Version' is considered unstable.
 --
@@ -178,6 +181,7 @@ incrementPatch v = v
 -- * The public API should not be considered stable.
 isDevelopment :: Version -> Bool
 isDevelopment = (== 0) . _versionMajor
+{-# INLINE isDevelopment #-}
 
 -- | Check if the 'Version' is considered stable.
 --
@@ -186,6 +190,7 @@ isDevelopment = (== 0) . _versionMajor
 -- it changes.
 isPublic :: Version -> Bool
 isPublic = (>= 1) . _versionMajor
+{-# INLINE isPublic #-}
 
 -- | Convert a 'Version' to it's readable 'String' representation.
 --
@@ -193,12 +198,14 @@ isPublic = (>= 1) . _versionMajor
 -- as such is faster than the semantically equivalent @unpack . toLazyText@.
 toString :: Version -> String
 toString = toMonoid (:[]) show Text.unpack Delim.semantic
+{-# INLINE toString #-}
 
 -- | Convert a 'Version' to a strict 'Text' representation.
 --
 -- Note: Equivalent to @toStrict . toLazyText@
 toText :: Version -> Text
 toText = LText.toStrict . toLazyText
+{-# INLINE toText #-}
 
 -- | Convert a 'Version' to a 'LText.Text' representation.
 --
@@ -208,15 +215,18 @@ toText = LText.toStrict . toLazyText
 -- is recommended.
 toLazyText :: Version -> LText.Text
 toLazyText = Build.toLazyTextWith 24 . toBuilder
+{-# INLINE toLazyText #-}
 
 -- | Convert a 'Version' to a 'Builder'.
 toBuilder :: Version -> Builder
 toBuilder = Delim.toBuilder Delim.semantic
+{-# INLINE toBuilder #-}
 
 -- | Parse a 'Version' from 'Text', returning an attoparsec error message
 -- in the 'Left' case on failure.
 fromText :: Text -> Either String Version
 fromText = parseOnly parser
+{-# INLINE fromText #-}
 
 -- | Parse a 'Version' from 'LText.Text', returning an attoparsec error message
 -- in the 'Left' case on failure.
@@ -225,11 +235,13 @@ fromText = parseOnly parser
 -- equivalent to @fromText . toStrict@
 fromLazyText :: LText.Text -> Either String Version
 fromLazyText = fromText . LText.toStrict
+{-# INLINE fromLazyText #-}
 
 -- | A greedy attoparsec 'Parser' which requires the entire 'Text'
 -- input to match.
 parser :: Parser Version
 parser = Delim.parser Delim.semantic
+{-# INLINE parser #-}
 
 -- | Safely construct a numeric identifier.
 numeric :: Int -> Identifier
