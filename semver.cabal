@@ -5,7 +5,7 @@ homepage:              https://github.com/brendanhay/semver
 license:               OtherLicense
 license-file:          LICENSE
 author:                Brendan Hay
-maintainer:            brendan.g.hay@gmail.com
+maintainer:            Brendan Hay <brendan.g.hay@gmail.com>
 copyright:             Copyright (c) 2014 Brendan Hay
 category:              Data
 build-type:            Simple
