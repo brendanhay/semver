@@ -3,7 +3,7 @@ SHELL := /usr/bin/env bash
 .PHONY: bench test
 
 build:
-	cabal build -j
+	cabal build $(addprefix -,$(findstring j,$(MAKEFLAGS)))
 
 install: cabal.sandbox.config
 	cabal install -j \
