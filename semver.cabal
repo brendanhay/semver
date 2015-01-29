@@ -6,7 +6,7 @@ license:               OtherLicense
 license-file:          LICENSE
 author:                Brendan Hay
 maintainer:            Brendan Hay <brendan.g.hay@gmail.com>
-copyright:             Copyright (c) 2014 Brendan Hay
+copyright:             Copyright (c) 2014-2014 Brendan Hay
 category:              Data
 build-type:            Simple
 extra-source-files:    README.md
