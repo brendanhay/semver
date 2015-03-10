@@ -40,13 +40,21 @@ data Version = Version
     } deriving (Eq, Show)
 
 instance Ord Version where
-    compare a b = on compare versions a b <> on compare _versionRelease a b
+    compare a b = on compare versions a b <> on compareVersionRelease _versionRelease a b
       where
         versions Version{..} =
             [ _versionMajor
             , _versionMinor
             , _versionPatch
             ]
+
+-- | Compare version releases.
+--
+-- Note: Contrary to 'List's, @[] `compare` [xs]@ equals to @GT@
+compareVersionRelease :: [Identifier] -> [Identifier] -> Ordering
+[] `compareVersionRelease` _  = GT
+_  `compareVersionRelease` [] = LT
+a  `compareVersionRelease` b  = compare a b
 
 instance NFData Version where
     rnf Version{..} =
