@@ -2,7 +2,7 @@
 {-# LANGUAGE RecordWildCards   #-}
 
 -- Module      : Data.SemVer.Internal
--- Copyright   : (c) 2014 Brendan Hay <brendan.g.hay@gmail.com>
+-- Copyright   : (c) 2014-2015 Brendan Hay <brendan.g.hay@gmail.com>
 -- License     : This Source Code Form is subject to the terms of
 --               the Mozilla Public License, v. 2.0.
 --               A copy of the MPL can be found in the LICENSE file or
@@ -40,13 +40,21 @@ data Version = Version
     } deriving (Eq, Show)
 
 instance Ord Version where
-    compare a b = on compare versions a b <> on compare _versionRelease a b
+    compare a b = on compare versions a b <> on compareVersionRelease _versionRelease a b
       where
         versions Version{..} =
             [ _versionMajor
             , _versionMinor
             , _versionPatch
             ]
+
+-- | Compare version releases.
+--
+-- Note: Contrary to 'List's, @[] `compare` [xs]@ equals to @GT@
+compareVersionRelease :: [Identifier] -> [Identifier] -> Ordering
+[] `compareVersionRelease` _  = GT
+_  `compareVersionRelease` [] = LT
+a  `compareVersionRelease` b  = compare a b
 
 instance NFData Version where
     rnf Version{..} =
