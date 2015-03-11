@@ -13,14 +13,14 @@
 
 module Data.SemVer.Internal where
 
-import Control.Applicative
-import Control.DeepSeq
-import Control.Monad
-import Data.Attoparsec.Text
-import Data.Function        (on)
-import Data.List            (intersperse)
-import Data.Monoid
-import Data.Text            (Text)
+import           Control.Applicative
+import           Control.DeepSeq
+import           Control.Monad
+import           Data.Attoparsec.Text
+import           Data.Function        (on)
+import           Data.List            (intersperse)
+import           Data.Monoid
+import           Data.Text            (Text)
 
 -- | An opaque type representing a successfully decoded or constructed
 -- semantic version. See the related functions and lenses for modification and
@@ -40,7 +40,7 @@ data Version = Version
     } deriving (Eq, Show)
 
 instance Ord Version where
-    compare a b = on compare versions a b <> on compareVersionRelease _versionRelease a b
+    compare a b = on compare versions a b <> release
       where
         versions Version{..} =
             [ _versionMajor
@@ -48,13 +48,14 @@ instance Ord Version where
             , _versionPatch
             ]
 
--- | Compare version releases.
---
--- Note: Contrary to 'List's, @[] `compare` [xs]@ equals to @GT@
-compareVersionRelease :: [Identifier] -> [Identifier] -> Ordering
-[] `compareVersionRelease` _  = GT
-_  `compareVersionRelease` [] = LT
-a  `compareVersionRelease` b  = compare a b
+        -- | Compare version releases.
+        --
+        -- Note: Contrary to 'List's, @[] `compare` [xs]@ equals to @GT@
+        release =
+            case (_versionRelease a, _versionRelease b) of
+                ([], _) -> GT
+                (_, []) -> LT
+                (x, y)  -> x `compare` y
 
 instance NFData Version where
     rnf Version{..} =
