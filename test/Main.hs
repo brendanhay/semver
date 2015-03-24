@@ -12,12 +12,12 @@
 
 module Main (main) where
 
-import Control.Applicative
-import Data.List           (sort)
-import Data.SemVer
-import Data.Text           (Text, unpack)
-import Test.Tasty
-import Test.Tasty.HUnit
+import           Control.Applicative
+import           Data.List           (sort)
+import           Data.SemVer
+import           Data.Text           (Text, unpack)
+import           Test.Tasty
+import           Test.Tasty.HUnit
 
 main :: IO ()
 main = defaultMain $ testGroup "tests"
@@ -42,12 +42,12 @@ main = defaultMain $ testGroup "tests"
             [sv000, sv100, sv101, sv110] @=? sort [sv101, sv110, sv100, sv000]
         , testCase "1.0.0 < 2.0.0" $
             true (sv100 < sv200)
-        , testCase "1.0.0 < 1.0.0-alpha" $
-            true (sv100 < sv100alpha)
+        , testCase "1.0.0-alpha < 1.0.0" $
+            true (sv100alpha < sv100)
         , testCase "1.0.0-alpha < 1.0.0-alpha.1" $
             true (sv100alpha < sv100alpha1)
-        , testCase "1.2.3+sha.2ac < 1.2.3-beta.1+sha.exp.dc2" $
-            true (sv123sha2ac < sv123beta1shaexpdc2)
+        , testCase "1.2.3-beta.1+sha.exp.dc2 < 1.2.3+sha.2ac" $
+            true (sv123beta1shaexpdc2 < sv123sha2ac)
         ]
     ]
 
