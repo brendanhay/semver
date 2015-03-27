@@ -49,7 +49,7 @@ benchmark semver-bench
 
     build-depends:
           base
-        , criterion >= 1.0.0.2 && < 1.1
+        , criterion >= 1.0.0.2
         , semver
         , text
 
