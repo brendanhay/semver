@@ -13,11 +13,11 @@ install: cabal.sandbox.config
 cabal.sandbox.config:
 	cabal sandbox init
 
-bench:
+bench: cabal.sandbox.config
 	cabal install --enable-benchmarks && \
  cabal bench --benchmark-option=-obenchmark.html
 
-test:
+test: cabal.sandbox.config
 	cabal install --enable-tests && \
  cabal test
 

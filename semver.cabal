@@ -1,5 +1,5 @@
 name:                  semver
-version:               0.3.3
+version:               0.3.3.1
 synopsis:              Representation, manipulation, and de/serialisation of Semantic Versions.
 homepage:              https://github.com/brendanhay/semver
 license:               OtherLicense
@@ -49,7 +49,7 @@ benchmark semver-bench
 
     build-depends:
           base
-        , criterion >= 1.0.0.2 && < 1.1
+        , criterion >= 1.0.0.2
         , semver
         , text
 
