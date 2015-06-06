@@ -18,6 +18,7 @@ import           Control.DeepSeq
 import           Control.Monad
 import           Data.Attoparsec.Text
 import           Data.Function        (on)
+import           Data.Hashable
 import           Data.List            (intersperse)
 import           Data.Monoid
 import           Data.Text            (Text)
@@ -65,6 +66,14 @@ instance NFData Version where
         `seq` rnf _versionRelease
         `seq` rnf _versionMeta
 
+instance Hashable Version where
+    hashWithSalt s Version {..} =
+        s `hashWithSalt` _versionMajor
+          `hashWithSalt` _versionMinor
+          `hashWithSalt` _versionPatch
+          `hashWithSalt` _versionRelease
+          `hashWithSalt` _versionMeta
+
 -- | A type representing an individual identifier from the release
 -- or metadata components of a 'Version'.
 --
@@ -88,6 +97,10 @@ instance Ord Identifier where
 instance NFData Identifier where
     rnf (INum  n) = rnf n
     rnf (IText t) = rnf t
+
+instance Hashable Identifier where
+    hashWithSalt s (INum  n) = s `hashWithSalt` (0 :: Int) `hashWithSalt` n
+    hashWithSalt s (IText t) = s `hashWithSalt` (1 :: Int) `hashWithSalt` t
 
 identifierParser :: Parser () -> Parser Identifier
 identifierParser p =
