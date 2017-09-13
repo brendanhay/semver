@@ -49,6 +49,16 @@ main = defaultMain $ testGroup "tests"
         , testCase "1.2.3-beta.1+sha.exp.dc2 < 1.2.3+sha.2ac" $
             true (sv123beta1shaexpdc2 < sv123sha2ac)
         ]
+    , testGroup "equality"
+        [ testCase "0.0.0 == 0.0.0" $
+            sv000 @=? sv000
+        , testCase "compare 0.0.0 0.0.0 == EQ" $
+            (sv000 `compare` sv000) @=? EQ
+        , testCase "1.2.3 /= 1.2.3+sha.2ac" $
+            (sv123 /= sv123sha2ac) @=? True
+        , testCase "compare 1.2.3 1.2.3+sha.2ac == EQ" $
+            (sv123 `compare` sv123sha2ac) @=? EQ
+        ]
     ]
 
 iso :: Text -> TestTree
@@ -66,6 +76,7 @@ sv100alpha1         = sv "1.0.0-alpha.1"
 sv101               = sv "1.0.1"
 sv110               = sv "1.1.0"
 sv200               = sv "2.0.0"
+sv123               = sv "1.2.3"
 sv123sha2ac         = sv "1.2.3+sha.2ac"
 sv123beta1shaexpdc2 = sv "1.2.3-beta.1+sha.exp.dc2"
 
