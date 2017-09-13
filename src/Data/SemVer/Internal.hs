@@ -54,8 +54,8 @@ instance Ord Version where
         -- Note: Contrary to 'List's, @[] `compare` [xs]@ equals to @GT@
         release =
             case (_versionRelease a, _versionRelease b) of
-                ([], _) -> GT
-                (_, []) -> LT
+                ([], _:_) -> GT
+                (_:_, []) -> LT
                 (x, y)  -> x `compare` y
 
 instance NFData Version where
