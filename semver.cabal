@@ -2,7 +2,7 @@ name:                  semver
 version:               0.3.4
 synopsis:              Representation, manipulation, and de/serialisation of Semantic Versions.
 homepage:              https://github.com/brendanhay/semver
-license:               OtherLicense
+license:               MPL-2.0
 license-file:          LICENSE
 author:                Brendan Hay
 maintainer:            Brendan Hay <brendan.g.hay@gmail.com>
@@ -10,7 +10,7 @@ copyright:             Copyright (c) 2014-2019 Brendan Hay
 category:              Data
 build-type:            Simple
 extra-source-files:    README.md
-cabal-version:         >= 1.10
+cabal-version:         >= 1.20
 
 description:
     Representation, manipulation, and de/serialisation of a Version type
