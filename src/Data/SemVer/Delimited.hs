@@ -107,14 +107,14 @@ toBuilder = toMonoid Build.singleton Build.decimal Build.fromText
 
 -- | A greedy attoparsec 'Parser' using the specified 'Delimiters' set
 -- which requires the entire 'Text' input to match.
-parser :: Delimiters -> Parser Version
-parser Delimiters{..} = Version
+parser :: Delimiters -> Bool -> Parser Version
+parser Delimiters{..} requireAtEnd = Version
     <$> (nonNegative <* char _delimMinor)
     <*> (nonNegative <* char _delimPatch)
     <*> nonNegative
     <*> option [] (try (char _delimRelease)  *> identifiers)
     <*> option [] (try (char _delimMeta) *> identifiers)
-    <*  endOfInput
+    <*  when requireAtEnd endOfInput
   where
     identifiers :: Parser [Identifier]
     identifiers = many (identifierParser $ void (char _delimIdent))
