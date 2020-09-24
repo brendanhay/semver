@@ -1,0 +1,10 @@
+cradle:
+  cabal:
+    - path: "src"
+      component: "lib:semver"
+
+    - path: "bench/Main.hs"
+      component: "semver:bench:semver-bench"
+
+    - path: "test"
+      component: "semver:test:semver-test"
