@@ -29,6 +29,7 @@ library
 
     exposed-modules:
           Data.SemVer
+        , Data.SemVer.Constraint
         , Data.SemVer.Delimited
 
     other-modules:

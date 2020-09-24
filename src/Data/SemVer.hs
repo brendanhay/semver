@@ -240,7 +240,7 @@ fromLazyText = fromText . LText.toStrict
 -- | A greedy attoparsec 'Parser' which requires the entire 'Text'
 -- input to match.
 parser :: Parser Version
-parser = Delim.parser Delim.semantic
+parser = Delim.parser Delim.semantic True
 {-# INLINE parser #-}
 
 -- | Safely construct a numeric identifier.
