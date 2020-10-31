@@ -24,9 +24,10 @@ where
 
 import           Control.Applicative
 import           Data.Attoparsec.Text
+import           Data.Monoid           ((<>))
 import           Data.SemVer.Internal
-import qualified Data.SemVer.Delimited         as DL
-import           Data.Text                      ( Text )
+import qualified Data.SemVer.Delimited as DL
+import           Data.Text             (Text)
 
 data Constraint
     = CAny
