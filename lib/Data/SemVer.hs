@@ -15,63 +15,77 @@
 -- in the specification are defined alongside additional lenses, traversals,
 -- common manipulations, and serialisation primitives.
 module Data.SemVer
-    (
-    -- * Version
-      Version
+  ( -- * Version
+    Version,
+
     -- ** Constructors
-    , version
-    , initial
+    version,
+    initial,
+
     -- ** Lenses
-    , major
-    , minor
-    , patch
-    , release
-    , metadata
+    major,
+    minor,
+    patch,
+    release,
+    metadata,
+
     -- ** Incrementing
     -- $incrementing
-    , incrementMajor
-    , incrementMinor
-    , incrementPatch
+    incrementMajor,
+    incrementMinor,
+    incrementPatch,
+
     -- ** Predicates
-    , isDevelopment
-    , isPublic
+    isDevelopment,
+    isPublic,
+
     -- ** Encoding
-    , toString
-    , toText
-    , toLazyText
-    , toBuilder
+    toString,
+    toText,
+    toLazyText,
+    toBuilder,
+
     -- ** Decoding
-    , fromText
-    , fromLazyText
-    , parser
+    fromText,
+    fromLazyText,
+    parser,
 
     -- * Identifiers
-    , Identifier
-    -- ** Constructors
-    , numeric
-    , textual
-    -- ** Prisms
-    , _Numeric
-    , _Textual
-    ) where
+    Identifier,
 
-import           Control.Applicative
-import           Data.Attoparsec.Text
-import qualified Data.SemVer.Delimited  as Delim
-import           Data.SemVer.Internal
-import           Data.Text              (Text)
-import qualified Data.Text              as Text
-import qualified Data.Text.Lazy         as LText
-import           Data.Text.Lazy.Builder (Builder)
+    -- ** Constructors
+    numeric,
+    textual,
+
+    -- ** Prisms
+    _Numeric,
+    _Textual,
+  )
+where
+
+import Control.Applicative
+import Data.Attoparsec.Text
+import qualified Data.SemVer.Delimited as Delim
+import Data.SemVer.Internal
+import Data.Text (Text)
+import qualified Data.Text as Text
+import qualified Data.Text.Lazy as LText
+import Data.Text.Lazy.Builder (Builder)
 import qualified Data.Text.Lazy.Builder as Build
 
 -- | Smart constructor fully specifying all available version components.
-version :: Int          -- ^ Major version component.
-        -> Int          -- ^ Minor version component.
-        -> Int          -- ^ Patch version component.
-        -> [Identifier] -- ^ Release identifiers.
-        -> [Identifier] -- ^ Metadata identifiers.
-        -> Version
+version ::
+  -- | Major version component.
+  Int ->
+  -- | Minor version component.
+  Int ->
+  -- | Patch version component.
+  Int ->
+  -- | Release identifiers.
+  [Identifier] ->
+  -- | Metadata identifiers.
+  [Identifier] ->
+  Version
 version = Version
 {-# INLINE version #-}
 
@@ -83,33 +97,35 @@ initial = version 0 0 0 [] []
 
 -- | Lens for the major version component.
 major :: Functor f => (Int -> f Int) -> Version -> f Version
-major f x = (\y -> x { _versionMajor = y }) <$> f (_versionMajor x)
+major f x = (\y -> x {_versionMajor = y}) <$> f (_versionMajor x)
 {-# INLINE major #-}
 
 -- | Lens for minor version component.
 minor :: Functor f => (Int -> f Int) -> Version -> f Version
-minor f x = (\y -> x { _versionMinor = y }) <$> f (_versionMinor x)
+minor f x = (\y -> x {_versionMinor = y}) <$> f (_versionMinor x)
 {-# INLINE minor #-}
 
 -- | Lens for the patch version component.
 patch :: Functor f => (Int -> f Int) -> Version -> f Version
-patch f x = (\y -> x { _versionPatch = y }) <$> f (_versionPatch x)
+patch f x = (\y -> x {_versionPatch = y}) <$> f (_versionPatch x)
 {-# INLINE patch #-}
 
 -- | Lens for the list of release identifiers.
-release :: Functor f
-        => ([Identifier] -> f [Identifier])
-        -> Version
-        -> f Version
-release f x = (\y -> x { _versionRelease = y }) <$> f (_versionRelease x)
+release ::
+  Functor f =>
+  ([Identifier] -> f [Identifier]) ->
+  Version ->
+  f Version
+release f x = (\y -> x {_versionRelease = y}) <$> f (_versionRelease x)
 {-# INLINE release #-}
 
 -- | Lens for the list of metadata identifiers.
-metadata :: Functor f
-         => ([Identifier] -> f [Identifier])
-         -> Version
-         -> f Version
-metadata f x = (\y -> x { _versionMeta = y }) <$> f (_versionMeta x)
+metadata ::
+  Functor f =>
+  ([Identifier] -> f [Identifier]) ->
+  Version ->
+  f Version
+metadata f x = (\y -> x {_versionMeta = y}) <$> f (_versionMeta x)
 {-# INLINE metadata #-}
 
 -- $incrementing
@@ -131,10 +147,11 @@ metadata f x = (\y -> x { _versionMeta = y }) <$> f (_versionMeta x)
 -- * Patch and minor version MUST be reset to 0 when major version
 -- is incremented.
 incrementMajor :: Version -> Version
-incrementMajor v = v
-    { _versionMajor = _versionMajor v + 1
-    , _versionMinor = 0
-    , _versionPatch = 0
+incrementMajor v =
+  v
+    { _versionMajor = _versionMajor v + 1,
+      _versionMinor = 0,
+      _versionPatch = 0
     }
 {-# INLINE incrementMajor #-}
 
@@ -154,9 +171,10 @@ incrementMajor v = v
 --
 -- * Patch version MUST be reset to 0 when minor version is incremented.
 incrementMinor :: Version -> Version
-incrementMinor v = v
-    { _versionMinor = _versionMinor v + 1
-    , _versionPatch = 0
+incrementMinor v =
+  v
+    { _versionMinor = _versionMinor v + 1,
+      _versionPatch = 0
     }
 {-# INLINE incrementMinor #-}
 
@@ -167,7 +185,8 @@ incrementMinor v = v
 --
 -- * A bug fix is defined as an internal change that fixes incorrect behavior.
 incrementPatch :: Version -> Version
-incrementPatch v = v
+incrementPatch v =
+  v
     { _versionPatch = _versionPatch v + 1
     }
 {-# INLINE incrementPatch #-}
@@ -197,7 +216,7 @@ isPublic = (>= 1) . _versionMajor
 -- Note: This is optimised for cases where you require 'String' output, and
 -- as such is faster than the semantically equivalent @unpack . toLazyText@.
 toString :: Version -> String
-toString = toMonoid (:[]) show Text.unpack Delim.semantic
+toString = toMonoid (: []) show Text.unpack Delim.semantic
 {-# INLINE toString #-}
 
 -- | Convert a 'Version' to a strict 'Text' representation.
@@ -251,18 +270,19 @@ numeric = INum
 -- | Construct an identifier from the given 'Text', returning 'Nothing' if
 -- neither a numeric or valid textual input is supplied.
 textual :: Text -> Maybe Identifier
-textual = either (const Nothing) (Just . IText)
+textual =
+  either (const Nothing) (Just . IText)
     . parseOnly (textualParser endOfInput <* endOfInput)
 {-# INLINE textual #-}
 
 -- | A prism into the numeric branch of an 'Identifier'.
 _Numeric :: Applicative f => (Int -> f Int) -> Identifier -> f Identifier
 _Numeric f (INum x) = INum <$> f x
-_Numeric _ x        = pure x
+_Numeric _ x = pure x
 {-# INLINE _Numeric #-}
 
 -- | A prism into the textual branch of an 'Identifier'.
 _Textual :: Applicative f => (Text -> f Text) -> Identifier -> f (Maybe Identifier)
 _Textual f (IText x) = textual <$> f x
-_Textual _ x         = pure (Just x)
+_Textual _ x = pure (Just x)
 {-# INLINE _Textual #-}

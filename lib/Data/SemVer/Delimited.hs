@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE RecordWildCards #-}
 
 -- Module      : Data.SemVer.Delimited
 -- Copyright   : (c) 2014-2019 Brendan Hay <brendan.g.hay@gmail.com>
@@ -34,29 +34,33 @@
 -- Using the same 'Delimiters' set with 'parser' would ensure
 -- correct decoding behaviour.
 module Data.SemVer.Delimited
-    (
-    -- * Delimiters
-      Delimiters
-    -- ** Constructor
-    , semantic
-    -- ** Lenses
-    , minor
-    , patch
-    , release
-    , metadata
-    , identifier
-    -- ** Encoding
-    , toBuilder
-    -- ** Decoding
-    , parser
-    ) where
+  ( -- * Delimiters
+    Delimiters,
 
-import           Control.Applicative
-import           Control.Monad
-import           Data.Attoparsec.Text
-import           Data.SemVer.Internal
-import           Data.Text.Lazy.Builder     (Builder)
-import qualified Data.Text.Lazy.Builder     as Build
+    -- ** Constructor
+    semantic,
+
+    -- ** Lenses
+    minor,
+    patch,
+    release,
+    metadata,
+    identifier,
+
+    -- ** Encoding
+    toBuilder,
+
+    -- ** Decoding
+    parser,
+  )
+where
+
+import Control.Applicative
+import Control.Monad
+import Data.Attoparsec.Text
+import Data.SemVer.Internal
+import Data.Text.Lazy.Builder (Builder)
+import qualified Data.Text.Lazy.Builder as Build
 import qualified Data.Text.Lazy.Builder.Int as Build
 
 -- | The default set of delimiters used in the semantic version specification.
@@ -68,37 +72,38 @@ import qualified Data.Text.Lazy.Builder.Int as Build
 -- 1.2.3-alpha.1+sha.exp.12ab3d9
 -- @
 semantic :: Delimiters
-semantic = Delimiters
-    { _delimMinor   = '.'
-    , _delimPatch   = '.'
-    , _delimRelease = '-'
-    , _delimMeta    = '+'
-    , _delimIdent   = '.'
+semantic =
+  Delimiters
+    { _delimMinor = '.',
+      _delimPatch = '.',
+      _delimRelease = '-',
+      _delimMeta = '+',
+      _delimIdent = '.'
     }
 
 -- | Lens for the minor version delimiter. Default: @.@
 minor :: Functor f => (Char -> f Char) -> Delimiters -> f Delimiters
-minor f x = (\y -> x { _delimMinor = y }) <$> f (_delimMinor x)
+minor f x = (\y -> x {_delimMinor = y}) <$> f (_delimMinor x)
 {-# INLINE minor #-}
 
 -- | Lens for the patch version delimiter. Default: @.@
 patch :: Functor f => (Char -> f Char) -> Delimiters -> f Delimiters
-patch f x = (\y -> x { _delimPatch = y }) <$> f (_delimPatch x)
+patch f x = (\y -> x {_delimPatch = y}) <$> f (_delimPatch x)
 {-# INLINE patch #-}
 
 -- | Lens for the release component delimiter. Default: @-@
 release :: Functor f => (Char -> f Char) -> Delimiters -> f Delimiters
-release f x = (\y -> x { _delimRelease = y }) <$> f (_delimRelease x)
+release f x = (\y -> x {_delimRelease = y}) <$> f (_delimRelease x)
 {-# INLINE release #-}
 
 -- | Lens for the metadata component delimiter. Default: @+@
 metadata :: Functor f => (Char -> f Char) -> Delimiters -> f Delimiters
-metadata f x = (\y -> x { _delimMeta = y }) <$> f (_delimMeta x)
+metadata f x = (\y -> x {_delimMeta = y}) <$> f (_delimMeta x)
 {-# INLINE metadata #-}
 
 -- | Lens for the individual identifier delimiter. Default: @.@
 identifier :: Functor f => (Char -> f Char) -> Delimiters -> f Delimiters
-identifier f x = (\y -> x { _delimIdent = y }) <$> f (_delimIdent x)
+identifier f x = (\y -> x {_delimIdent = y}) <$> f (_delimIdent x)
 {-# INLINE identifier #-}
 
 -- | Convert a 'Version' to a 'Builder' using the specified 'Delimiters' set.
@@ -108,13 +113,14 @@ toBuilder = toMonoid Build.singleton Build.decimal Build.fromText
 -- | A greedy attoparsec 'Parser' using the specified 'Delimiters' set
 -- which requires the entire 'Text' input to match.
 parser :: Delimiters -> Bool -> Parser Version
-parser Delimiters{..} requireAtEnd = Version
+parser Delimiters {..} requireAtEnd =
+  Version
     <$> (nonNegative <* char _delimMinor)
     <*> (nonNegative <* char _delimPatch)
     <*> nonNegative
-    <*> option [] (try (char _delimRelease)  *> identifiers)
+    <*> option [] (try (char _delimRelease) *> identifiers)
     <*> option [] (try (char _delimMeta) *> identifiers)
-    <*  when requireAtEnd endOfInput
+    <* when requireAtEnd endOfInput
   where
     identifiers :: Parser [Identifier]
     identifiers = many (identifierParser $ void (char _delimIdent))
