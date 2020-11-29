@@ -1,5 +1,6 @@
+-- |
 -- Module      : Data.SemVer
--- Copyright   : (c) 2014-2019 Brendan Hay <brendan.g.hay@gmail.com>
+-- Copyright   : (c) 2014-2020 Brendan Hay <brendan.g.hay@gmail.com>
 -- License     : This Source Code Form is subject to the terms of
 --               the Mozilla Public License, v. 2.0.
 --               A copy of the MPL can be found in the LICENSE file or
@@ -7,8 +8,8 @@
 -- Maintainer  : Brendan Hay <brendan.g.hay@gmail.com>
 -- Stability   : experimental
 -- Portability : non-portable (GHC extensions)
-
--- | An implementation of the Semantic Versioning specification located at
+--
+-- An implementation of the Semantic Versioning specification located at
 -- <http://semver.org>.
 --
 -- A canonical 'Version' type and functions representing behaviour as outlined
@@ -63,15 +64,15 @@ module Data.SemVer
   )
 where
 
-import Control.Applicative
-import Data.Attoparsec.Text
-import qualified Data.SemVer.Delimited as Delim
+import Data.Attoparsec.Text (Parser)
+import qualified Data.Attoparsec.Text as Parsec
+import qualified Data.SemVer.Delimited as Delimited
 import Data.SemVer.Internal
 import Data.Text (Text)
 import qualified Data.Text as Text
-import qualified Data.Text.Lazy as LText
+import qualified Data.Text.Lazy as Text.Lazy
 import Data.Text.Lazy.Builder (Builder)
-import qualified Data.Text.Lazy.Builder as Build
+import qualified Data.Text.Lazy.Builder as Text.Builder
 
 -- | Smart constructor fully specifying all available version components.
 version ::
@@ -216,50 +217,50 @@ isPublic = (>= 1) . _versionMajor
 -- Note: This is optimised for cases where you require 'String' output, and
 -- as such is faster than the semantically equivalent @unpack . toLazyText@.
 toString :: Version -> String
-toString = toMonoid (: []) show Text.unpack Delim.semantic
+toString = toMonoid (: []) show Text.unpack Delimited.semantic
 {-# INLINEABLE toString #-}
 
 -- | Convert a 'Version' to a strict 'Text' representation.
 --
 -- Note: Equivalent to @toStrict . toLazyText@
 toText :: Version -> Text
-toText = LText.toStrict . toLazyText
+toText = Text.Lazy.toStrict . toLazyText
 {-# INLINEABLE toText #-}
 
--- | Convert a 'Version' to a 'LText.Text' representation.
+-- | Convert a 'Version' to a 'Text.Lazy.Text' representation.
 --
 -- Note: This uses a lower 'Builder' buffer size optimised for commonly
 -- found version formats. If you have particuarly long version numbers
--- using 'toBuilder' and 'Build.toLazyTextWith' to control the buffer size
+-- using 'toBuilder' and 'Text.Builder.toLazyTextWith' to control the buffer size
 -- is recommended.
-toLazyText :: Version -> LText.Text
-toLazyText = Build.toLazyTextWith 24 . toBuilder
+toLazyText :: Version -> Text.Lazy.Text
+toLazyText = Text.Builder.toLazyTextWith 24 . toBuilder
 {-# INLINEABLE toLazyText #-}
 
 -- | Convert a 'Version' to a 'Builder'.
 toBuilder :: Version -> Builder
-toBuilder = Delim.toBuilder Delim.semantic
+toBuilder = Delimited.toBuilder Delimited.semantic
 {-# INLINEABLE toBuilder #-}
 
 -- | Parse a 'Version' from 'Text', returning an attoparsec error message
 -- in the 'Left' case on failure.
 fromText :: Text -> Either String Version
-fromText = parseOnly parser
+fromText = Parsec.parseOnly parser
 {-# INLINEABLE fromText #-}
 
--- | Parse a 'Version' from 'LText.Text', returning an attoparsec error message
+-- | Parse a 'Version' from 'Text.Lazy.Text', returning an attoparsec error message
 -- in the 'Left' case on failure.
 --
 -- Note: The underlying attoparsec 'Parser' is based on 'Text' and this is
 -- equivalent to @fromText . toStrict@
-fromLazyText :: LText.Text -> Either String Version
-fromLazyText = fromText . LText.toStrict
+fromLazyText :: Text.Lazy.Text -> Either String Version
+fromLazyText = fromText . Text.Lazy.toStrict
 {-# INLINEABLE fromLazyText #-}
 
 -- | A greedy attoparsec 'Parser' which requires the entire 'Text'
 -- input to match.
 parser :: Parser Version
-parser = Delim.parser Delim.semantic True
+parser = Delimited.parser Delimited.semantic True
 {-# INLINEABLE parser #-}
 
 -- | Safely construct a numeric identifier.
@@ -272,7 +273,7 @@ numeric = INum
 textual :: Text -> Maybe Identifier
 textual =
   either (const Nothing) (Just . IText)
-    . parseOnly (textualParser endOfInput <* endOfInput)
+    . Parsec.parseOnly (textualParser Parsec.endOfInput <* Parsec.endOfInput)
 {-# INLINEABLE textual #-}
 
 -- | A prism into the numeric branch of an 'Identifier'.

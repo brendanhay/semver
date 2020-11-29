@@ -1,8 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE RecordWildCards #-}
 
+-- |
 -- Module      : Data.SemVer.Constraint
 -- Copyright   : (c) 2020 Brendan Hay <brendan.g.hay@gmail.com>, Keagan McClelland <keagan.mcclelland@gmail.com>
 -- License     : This Source Code Form is subject to the terms of
@@ -12,21 +11,24 @@
 -- Maintainer  : Brendan Hay <brendan.g.hay@gmail.com>
 -- Stability   : experimental
 -- Portability : non-portable (GHC extensions)
-
--- | An implementation of the Semantic Versioning Constraints.
--- In absence of a standard around constraints, the behavior of node-semver is closely followed.
--- The behavior is outlined here: https://github.com/npm/node-semver#ranges
+--
+-- An implementation of the Semantic Versioning Constraints.
+--
+-- In the absence of a standard or specification for versioning constraints, the
+-- behavior of node-semver is closely followed. This behavior is outlined <https://github.com/npm/node-semver#ranges here>.
 module Data.SemVer.Constraint
   ( Constraint (..),
     satisfies,
     fromText,
+    parser,
+    parserWith,
   )
 where
 
-import Control.Applicative
-import Data.Attoparsec.Text
-import Data.Monoid ((<>))
-import qualified Data.SemVer.Delimited as DL
+import Control.Applicative ((<|>))
+import Data.Attoparsec.Text (Parser)
+import qualified Data.Attoparsec.Text as Parsec
+import qualified Data.SemVer.Delimited as Delimited
 import Data.SemVer.Internal
 import Data.Text (Text)
 
@@ -62,9 +64,11 @@ satisfies version constraint =
     else go version constraint
   where
     triple :: Version -> (Int, Int, Int)
-    triple = liftA3 (,,) _versionMajor _versionMinor _versionPatch
+    triple = (,,) <$> _versionMajor <*> _versionMinor <*> _versionPatch
+
     containsPrerelease :: Version -> Bool
-    containsPrerelease v = not . null . _versionRelease $ v
+    containsPrerelease = not . null . _versionRelease
+
     -- this helps us gather the comparators that actually consented to prerelease versions
     prereleaseComparators :: Constraint -> [(Version -> Constraint, Version)]
     prereleaseComparators = \case
@@ -76,6 +80,7 @@ satisfies version constraint =
       CEq v -> if containsPrerelease v then [(CEq, v)] else []
       CAnd a b -> prereleaseComparators a <> prereleaseComparators b
       COr a b -> prereleaseComparators a <> prereleaseComparators b
+
     -- naive satisfaction checking
     go :: Version -> Constraint -> Bool
     go v c = case c of
@@ -93,22 +98,40 @@ satisfies version constraint =
 --
 -- Advanced syntax is not yet supported.
 fromText :: Text -> Either String Constraint
-fromText = parseOnly parser
+fromText = Parsec.parseOnly parser
 
 parser :: Parser Constraint
-parser = parserD DL.semantic
+parser = parserWith Delimited.semantic
 
-parserD :: Delimiters -> Parser Constraint
-parserD d@Delimiters {..} = choice . fmap (<* endOfInput) $ [primP, andP, orP]
+parserWith :: Delimiters -> Parser Constraint
+parserWith delims =
+  Parsec.choice ((<* Parsec.endOfInput) <$> [primP, andP, orP])
   where
+    versionP =
+      Delimited.parser delims False
+
     primP =
-      choice
-        [ char '*' *> pure CAny,
-          char '<' *> (CLt <$> DL.parser d False),
-          string "<=" *> (CLtEq <$> DL.parser d False),
-          char '>' *> (CGt <$> DL.parser d False),
-          string ">=" *> (CGtEq <$> DL.parser d False),
-          CEq <$> ((option '=' $ char '=') *> DL.parser d False)
+      Parsec.choice
+        [ Parsec.char '*' *> pure CAny,
+          Parsec.char '<' *> (CLt <$> versionP),
+          Parsec.string "<=" *> (CLtEq <$> versionP),
+          Parsec.char '>' *> (CGt <$> versionP),
+          Parsec.string ">=" *> (CGtEq <$> versionP),
+          CEq <$> ((Parsec.option '=' (Parsec.char '=')) *> versionP)
         ]
-    andP = liftA2 CAnd primP (skipSpace *> (andP <|> primP))
-    orP = liftA2 COr (andP <|> primP) (skipSpace *> string "||" *> skipSpace *> (orP <|> andP <|> primP))
+
+    andP =
+      CAnd
+        <$> primP
+        <*> ( Parsec.skipSpace
+                *> (andP <|> primP)
+            )
+
+    orP =
+      COr
+        <$> (andP <|> primP)
+        <*> ( Parsec.skipSpace
+                *> Parsec.string "||"
+                *> Parsec.skipSpace
+                *> (orP <|> andP <|> primP)
+            )

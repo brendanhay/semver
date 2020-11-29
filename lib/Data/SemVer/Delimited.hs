@@ -1,8 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
+-- |
 -- Module      : Data.SemVer.Delimited
--- Copyright   : (c) 2014-2019 Brendan Hay <brendan.g.hay@gmail.com>
+-- Copyright   : (c) 2014-2020 Brendan Hay <brendan.g.hay@gmail.com>
 -- License     : This Source Code Form is subject to the terms of
 --               the Mozilla Public License, v. 2.0.
 --               A copy of the MPL can be found in the LICENSE file or
@@ -10,8 +11,8 @@
 -- Maintainer  : Brendan Hay <brendan.g.hay@gmail.com>
 -- Stability   : experimental
 -- Portability : non-portable (GHC extensions)
-
--- | A set of delimiters can be used to encode/decode a 'Version' and specify
+--
+-- A set of delimiters can be used to encode/decode a 'Version' and specify
 -- alternative serialisation strategies.
 --
 -- Lenses can be used to modify the default delimiter set, as in the following
@@ -55,13 +56,14 @@ module Data.SemVer.Delimited
   )
 where
 
-import Control.Applicative
-import Control.Monad
-import Data.Attoparsec.Text
+import Control.Applicative (many)
+import qualified Control.Monad as Monad
+import Data.Attoparsec.Text (Parser)
+import qualified Data.Attoparsec.Text as Parsec
 import Data.SemVer.Internal
 import Data.Text.Lazy.Builder (Builder)
-import qualified Data.Text.Lazy.Builder as Build
-import qualified Data.Text.Lazy.Builder.Int as Build
+import qualified Data.Text.Lazy.Builder as Text.Builder
+import qualified Data.Text.Lazy.Builder.Int as Text.Builder.Int
 
 -- | The default set of delimiters used in the semantic version specification.
 --
@@ -84,43 +86,49 @@ semantic =
 -- | Lens for the minor version delimiter. Default: @.@
 minor :: Functor f => (Char -> f Char) -> Delimiters -> f Delimiters
 minor f x = (\y -> x {_delimMinor = y}) <$> f (_delimMinor x)
-{-# INLINE minor #-}
+{-# INLINEABLE minor #-}
 
 -- | Lens for the patch version delimiter. Default: @.@
 patch :: Functor f => (Char -> f Char) -> Delimiters -> f Delimiters
 patch f x = (\y -> x {_delimPatch = y}) <$> f (_delimPatch x)
-{-# INLINE patch #-}
+{-# INLINEABLE patch #-}
 
 -- | Lens for the release component delimiter. Default: @-@
 release :: Functor f => (Char -> f Char) -> Delimiters -> f Delimiters
 release f x = (\y -> x {_delimRelease = y}) <$> f (_delimRelease x)
-{-# INLINE release #-}
+{-# INLINEABLE release #-}
 
 -- | Lens for the metadata component delimiter. Default: @+@
 metadata :: Functor f => (Char -> f Char) -> Delimiters -> f Delimiters
 metadata f x = (\y -> x {_delimMeta = y}) <$> f (_delimMeta x)
-{-# INLINE metadata #-}
+{-# INLINEABLE metadata #-}
 
 -- | Lens for the individual identifier delimiter. Default: @.@
 identifier :: Functor f => (Char -> f Char) -> Delimiters -> f Delimiters
 identifier f x = (\y -> x {_delimIdent = y}) <$> f (_delimIdent x)
-{-# INLINE identifier #-}
+{-# INLINEABLE identifier #-}
 
 -- | Convert a 'Version' to a 'Builder' using the specified 'Delimiters' set.
 toBuilder :: Delimiters -> Version -> Builder
-toBuilder = toMonoid Build.singleton Build.decimal Build.fromText
+toBuilder =
+  toMonoid
+    Text.Builder.singleton
+    Text.Builder.Int.decimal
+    Text.Builder.fromText
+{-# INLINEABLE toBuilder #-}
 
 -- | A greedy attoparsec 'Parser' using the specified 'Delimiters' set
 -- which requires the entire 'Text' input to match.
 parser :: Delimiters -> Bool -> Parser Version
 parser Delimiters {..} requireAtEnd =
   Version
-    <$> (nonNegative <* char _delimMinor)
-    <*> (nonNegative <* char _delimPatch)
+    <$> (nonNegative <* Parsec.char _delimMinor)
+    <*> (nonNegative <* Parsec.char _delimPatch)
     <*> nonNegative
-    <*> option [] (try (char _delimRelease) *> identifiers)
-    <*> option [] (try (char _delimMeta) *> identifiers)
-    <* when requireAtEnd endOfInput
+    <*> Parsec.option [] (Parsec.try (Parsec.char _delimRelease) *> identifiers)
+    <*> Parsec.option [] (Parsec.try (Parsec.char _delimMeta) *> identifiers)
+    <* Monad.when requireAtEnd Parsec.endOfInput
   where
     identifiers :: Parser [Identifier]
-    identifiers = many (identifierParser $ void (char _delimIdent))
+    identifiers = many (identifierParser $ Monad.void (Parsec.char _delimIdent))
+{-# INLINEABLE parser #-}

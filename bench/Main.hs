@@ -1,7 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+-- |
 -- Module      : Main
--- Copyright   : (c) 2014-2019 Brendan Hay <brendan.g.hay@gmail.com>
+-- Copyright   : (c) 2014-2020 Brendan Hay <brendan.g.hay@gmail.com>
 -- License     : This Source Code Form is subject to the terms of
 --               the Mozilla Public License, v. 2.0.
 --               A copy of the MPL can be found in the LICENSE file or
@@ -9,17 +10,16 @@
 -- Maintainer  : Brendan Hay <brendan.g.hay@gmail.com>
 -- Stability   : experimental
 -- Portability : non-portable (GHC extensions)
-
 module Main (main) where
 
 import Criterion
-import Criterion.Main
-import Data.List (sort)
-import Data.SemVer
-import Data.Text (Text, pack)
-import Data.Version (parseVersion, showVersion)
-import qualified Data.Version as Ver
-import Text.ParserCombinators.ReadP
+import Criterion.Main (defaultMain)
+import qualified Data.List as List
+import qualified Data.SemVer as SemVer
+import Data.Text (Text)
+import qualified Data.Text as Text
+import qualified Data.Version as Version
+import qualified Text.ParserCombinators.ReadP as ReadP
 
 main :: IO ()
 main =
@@ -29,19 +29,19 @@ main =
         [ bgroup
             "semver"
             [ bgroup
-                "fromText . pack"
+                "fromText . Text.pack"
                 [ bench "1.2.3" $
-                    nf (sv . pack) "1.2.3",
+                    nf (sv . Text.pack) "1.2.3",
                   bench "1.2.3-alpha" $
-                    nf (sv . pack) "1.2.3-alpha",
+                    nf (sv . Text.pack) "1.2.3-alpha",
                   bench "1.2.3-alpha.1" $
-                    nf (sv . pack) "1.2.3-alpha.1",
+                    nf (sv . Text.pack) "1.2.3-alpha.1",
                   bench "1.2.3+123" $
-                    nf (sv . pack) "1.2.3+123",
+                    nf (sv . Text.pack) "1.2.3+123",
                   bench "1.2.3+sha.2ac" $
-                    nf (sv . pack) "1.2.3+sha.2ac",
+                    nf (sv . Text.pack) "1.2.3+sha.2ac",
                   bench "1.2.3-beta.1+sha.exp.dc2" $
-                    nf (sv . pack) "1.2.3-beta.1+sha.exp.dc2"
+                    nf (sv . Text.pack) "1.2.3-beta.1+sha.exp.dc2"
                 ]
             ],
           bgroup
@@ -68,60 +68,60 @@ main =
         [ bgroup
             "semver"
             [ bgroup
-                "toLazyText"
+                "SemVer.toLazyText"
                 [ bench "1.2.3" $
-                    nf toLazyText sv123,
+                    nf SemVer.toLazyText sv123,
                   bench "1.2.3-alpha" $
-                    nf toLazyText sv123alpha,
+                    nf SemVer.toLazyText sv123alpha,
                   bench "1.2.3-alpha.1" $
-                    nf toLazyText sv123alpha1,
+                    nf SemVer.toLazyText sv123alpha1,
                   bench "1.2.3+123" $
-                    nf toLazyText sv123123,
+                    nf SemVer.toLazyText sv123123,
                   bench "1.2.3+sha.2ac" $
-                    nf toLazyText sv123sha2ac,
+                    nf SemVer.toLazyText sv123sha2ac,
                   bench "1.2.3-beta.1+sha.exp.dc2" $
-                    nf toLazyText sv123beta1shaexpdc2
+                    nf SemVer.toLazyText sv123beta1shaexpdc2
                 ],
               bgroup
-                "toString"
+                "SemVer.toString"
                 [ bench "1.2.3" $
-                    nf toString sv123,
+                    nf SemVer.toString sv123,
                   bench "1.2.3-alpha" $
-                    nf toString sv123alpha,
+                    nf SemVer.toString sv123alpha,
                   bench "1.2.3-alpha.1" $
-                    nf toString sv123alpha1,
+                    nf SemVer.toString sv123alpha1,
                   bench "1.2.3+123" $
-                    nf toString sv123123,
+                    nf SemVer.toString sv123123,
                   bench "1.2.3+sha.2ac" $
-                    nf toString sv123sha2ac,
+                    nf SemVer.toString sv123sha2ac,
                   bench "1.2.3-beta.1+sha.exp.dc2" $
-                    nf toString sv123beta1shaexpdc2
+                    nf SemVer.toString sv123beta1shaexpdc2
                 ]
             ],
           bgroup
             "version"
             [ bgroup
-                "showVersion"
+                "Version.showVersion"
                 [ bench "1.2.3" $
-                    nf showVersion dv123,
+                    nf Version.showVersion dv123,
                   bench "1.2.3-alpha" $
-                    nf showVersion dv123alpha,
+                    nf Version.showVersion dv123alpha,
                   bench "1.2.3-alpha.1" $
-                    nf showVersion dv123alpha1,
+                    nf Version.showVersion dv123alpha1,
                   bench "1.2.3+123" $
-                    nf showVersion dv123123,
+                    nf Version.showVersion dv123123,
                   bench "1.2.3+sha.2ac" $
-                    nf showVersion dv123sha2ac,
+                    nf Version.showVersion dv123sha2ac,
                   bench "1.2.3-beta.1+sha.exp.dc2" $
-                    nf showVersion dv123beta1shaexpdc2
+                    nf Version.showVersion dv123beta1shaexpdc2
                 ]
             ]
         ],
       bgroup
-        "sort"
+        "List.sort"
         [ bench "semver" $
             nf
-              sort
+              List.sort
               [ sv123,
                 sv123alpha,
                 sv123alpha1,
@@ -131,7 +131,7 @@ main =
               ],
           bench "version" $
             nf
-              sort
+              List.sort
               [ dv123,
                 dv123alpha,
                 dv123alpha1,
@@ -142,8 +142,8 @@ main =
         ]
     ]
 
-sv123, sv123alpha, sv123alpha1, sv123123 :: Version
-sv123sha2ac, sv123beta1shaexpdc2 :: Version
+sv123, sv123alpha, sv123alpha1, sv123123 :: SemVer.Version
+sv123sha2ac, sv123beta1shaexpdc2 :: SemVer.Version
 sv123 = sv "1.2.3"
 sv123alpha = sv "1.2.3-alpha"
 sv123alpha1 = sv "1.2.3-alpha.1"
@@ -153,8 +153,8 @@ sv123sha2ac = sv "1.2.3+sha.2ac"
 
 sv123beta1shaexpdc2 = sv "1.2.3-beta.1+sha.exp.dc2"
 
-dv123, dv123alpha, dv123alpha1, dv123123 :: Ver.Version
-dv123sha2ac, dv123beta1shaexpdc2 :: Ver.Version
+dv123, dv123alpha, dv123alpha1, dv123123 :: Version.Version
+dv123sha2ac, dv123beta1shaexpdc2 :: Version.Version
 dv123 = dv "1.2.3"
 dv123alpha = dv "1.2.3-alpha"
 dv123alpha1 = dv "1.2.3-alpha.1"
@@ -164,10 +164,11 @@ dv123sha2ac = dv "1.2.3+sha.2ac"
 
 dv123beta1shaexpdc2 = dv "1.2.3-beta.1+sha.exp.dc2"
 
-sv :: Text -> Version
-sv t = case fromText t of
-  Left e -> error e
-  Right x -> x
+sv :: Text -> SemVer.Version
+sv t =
+  case SemVer.fromText t of
+    Left e -> error e
+    Right x -> x
 
-dv :: String -> Ver.Version
-dv = fst . last . readP_to_S parseVersion
+dv :: String -> Version.Version
+dv = fst . last . ReadP.readP_to_S Version.parseVersion

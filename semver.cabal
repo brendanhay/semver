@@ -9,7 +9,7 @@ license:            MPL-2.0
 license-file:       LICENSE
 author:             Brendan Hay
 maintainer:         Brendan Hay <brendan.g.hay@gmail.com>
-copyright:          Copyright (c) 2014-2019 Brendan Hay
+copyright:          Copyright (c) 2014-2020 Brendan Hay
 category:           Data
 build-type:         Simple
 extra-source-files: README.md
@@ -40,15 +40,15 @@ library
     Data.SemVer
     Data.SemVer.Constraint
     Data.SemVer.Delimited
+    Data.SemVer.Internal
 
-  other-modules:   Data.SemVer.Internal
   build-depends:
     , attoparsec  >=0.10
-    , deepseq     >=1.1
-    , hashable    >=1.1.1
+    , deepseq     >=1.4
+    , hashable    >=1.2.5
     , text        >=0.11
 
-benchmark semver-bench
+benchmark bench
   import:         base
   type:           exitcode-stdio-1.0
   main-is:        Main.hs
@@ -59,7 +59,7 @@ benchmark semver-bench
     , semver
     , text
 
-test-suite semver-test
+test-suite tests
   import:         base
   type:           exitcode-stdio-1.0
   hs-source-dirs: test
