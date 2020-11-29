@@ -10,7 +10,7 @@ copyright:             Copyright (c) 2014-2019 Brendan Hay
 category:              Data
 build-type:            Simple
 extra-source-files:    README.md
-cabal-version:         >= 1.20
+cabal-version:         2.0
 
 description:
     Representation, manipulation, and de/serialisation of a Version type
