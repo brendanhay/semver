@@ -69,6 +69,33 @@ main =
               (sv123 `compare` sv123sha2ac) @=? EQ
           ],
         testGroup
+          "constraint parsing and printing"
+          (((\c -> testCase ("round-trip parsing " <> Text.unpack c)
+                (SemVer.Constraint.toText <$> SemVer.Constraint.fromText c
+                  @?= Right c
+                )
+            ) <$>
+            [ ">=1.2.3"
+            , ">1.2.3"
+            , "<1.2.4"
+            , "=1.2.4"
+            , ">1.0.0 <2.0.0"
+            , "<2.0.0 || >3.0.0"
+            , ">1.0.0 <2.0.0 || =3.0.0"
+            , "=3.0.0 || <2.0.0 >1.0.0"
+            , ">=1.0.0-alpha"
+            , ">=1.0.0"
+            , ">=1.0.0-alpha"
+            , ">=1.0.0-alpha"
+            , ">=2.0.0-alpha"
+            ]
+          ) <>
+          [ testCase "always uses the = sign" $
+              (SemVer.Constraint.toText <$> SemVer.Constraint.fromText "1.0.0"
+                @?= Right "=1.0.0"
+              )
+          ]),
+        testGroup
           "constraint satisfaction"
           [ testGroup
               "basic satisfaction"
