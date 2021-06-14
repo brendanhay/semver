@@ -19,6 +19,7 @@
 module Data.SemVer.Constraint
   ( Constraint (..),
     satisfies,
+    toText,
     fromText,
     parser,
     parserWith,
@@ -30,6 +31,7 @@ import Data.Attoparsec.Text (Parser)
 import qualified Data.Attoparsec.Text as Parsec
 import qualified Data.SemVer.Delimited as Delimited
 import Data.SemVer.Internal
+import qualified Data.SemVer as SemVer
 import Data.Text (Text)
 
 data Constraint
@@ -95,6 +97,18 @@ satisfies version constraint =
 
 -- | Parsing function to create a 'Constraint' from 'Text' according to the rules specified
 -- here: https://github.com/npm/node-semver#ranges
+
+toText :: Constraint -> Text
+toText c = case c of
+  CAny -> "*"
+  CLt vc -> "<" <> SemVer.toText vc
+  CLtEq vc -> "<=" <> SemVer.toText vc
+  CGt vc -> ">" <> SemVer.toText vc
+  CGtEq vc -> ">=" <> SemVer.toText vc
+  CEq vc -> "=" <> SemVer.toText vc
+  CAnd a b -> toText a <> " " <> toText b
+  COr a b -> toText a <> " || " <> toText b
+
 --
 -- Advanced syntax is not yet supported.
 fromText :: Text -> Either String Constraint
