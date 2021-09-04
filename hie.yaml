@@ -1,10 +1,10 @@
 cradle:
   cabal:
-    - path: "src"
+    - path: "lib"
       component: "lib:semver"
 
     - path: "bench/Main.hs"
-      component: "semver:bench:semver-bench"
+      component: "semver:bench:bench"
 
     - path: "test"
-      component: "semver:test:semver-test"
+      component: "semver:test:tests"
