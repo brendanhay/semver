@@ -70,31 +70,149 @@ main =
           ],
         testGroup
           "constraint parsing and printing"
-          (((\c -> testCase ("round-trip parsing " <> Text.unpack c)
-                (SemVer.Constraint.toText <$> SemVer.Constraint.fromText c
-                  @?= Right c
-                )
-            ) <$>
-            [ ">=1.2.3"
-            , ">1.2.3"
-            , "<1.2.4"
-            , "=1.2.4"
-            , ">1.0.0 <2.0.0"
-            , "<2.0.0 || >3.0.0"
-            , ">1.0.0 <2.0.0 || =3.0.0"
-            , "=3.0.0 || <2.0.0 >1.0.0"
-            , ">=1.0.0-alpha"
-            , ">=1.0.0"
-            , ">=1.0.0-alpha"
-            , ">=1.0.0-alpha"
-            , ">=2.0.0-alpha"
-            ]
-          ) <>
-          [ testCase "always uses the = sign" $
-              (SemVer.Constraint.toText <$> SemVer.Constraint.fromText "1.0.0"
-                @?= Right "=1.0.0"
+          ( ( ( \c ->
+                  testCase
+                    ("round-trip parsing " <> Text.unpack c)
+                    ( SemVer.Constraint.toText <$> SemVer.Constraint.fromText c
+                        @?= Right c
+                    )
               )
-          ]),
+                <$> [ ">=1.2.3",
+                      ">1.2.3",
+                      "<1.2.4",
+                      "=1.2.4",
+                      ">1.0.0 <2.0.0",
+                      "<2.0.0 || >3.0.0",
+                      ">1.0.0 <2.0.0 || =3.0.0",
+                      "=3.0.0 || <2.0.0 >1.0.0",
+                      ">=1.0.0-alpha",
+                      ">=1.0.0",
+                      ">=1.0.0-alpha",
+                      ">=1.0.0-alpha",
+                      ">=2.0.0-alpha"
+                    ]
+            )
+              <> [ testCase "always uses the = sign" $
+                     ( SemVer.Constraint.toText <$> SemVer.Constraint.fromText "1.0.0"
+                         @?= Right "=1.0.0"
+                     )
+                 ]
+              <> [ -- these tests are taken from the node-semver mostly verbatim:
+                   -- https://github.com/npm/node-semver/blob/e79ac3a450e8bb504e78b8159e3efc70895699b8/test/fixtures/range-parse.js
+                   --
+                   -- Some of the tests have been modified to have equivalent
+                   -- right hand sides however, due to differences in how we
+                   -- pretty print / to account for the fact that we don't
+                   -- normalize constraints before printing.
+                   testGroup "node-semver package parsing test cases" $
+                     let desugarsTo c result =
+                           testCase (Text.unpack c <> " => " <> Text.unpack result) $
+                             SemVer.Constraint.toText <$> SemVer.Constraint.fromText c
+                               @?= Right result
+                         failsToParse c =
+                           testCase (Text.unpack c <> " fails to parse") $
+                             case SemVer.Constraint.toText <$> SemVer.Constraint.fromText c of
+                               Left _ -> pure ()
+                               Right r -> error $ "expected parse failure but got: " <> Text.unpack r
+                      in [ "1.0.0 - 2.0.0" `desugarsTo` ">=1.0.0 <=2.0.0",
+                           "1 - 2" `desugarsTo` ">=1.0.0 <3.0.0",
+                           "1.0 - 2.0" `desugarsTo` ">=1.0.0 <2.1.0",
+                           ">=*" `desugarsTo` ">=0.0.0",
+                           "*" `desugarsTo` "*",
+                           -- in node-semver this parses to *; we don't do this
+                           -- due to weird edge-cases
+                           failsToParse "",
+                           ">=1.0.0" `desugarsTo` ">=1.0.0",
+                           ">1.0.0" `desugarsTo` ">1.0.0",
+                           "<=2.0.0" `desugarsTo` "<=2.0.0",
+                           "1" `desugarsTo` ">=1.0.0 <2.0.0",
+                           "<=2.0.0" `desugarsTo` "<=2.0.0",
+                           "<=2.0.0" `desugarsTo` "<=2.0.0",
+                           "<2.0.0" `desugarsTo` "<2.0.0",
+                           "<2.0.0" `desugarsTo` "<2.0.0",
+                           ">= 1.0.0" `desugarsTo` ">=1.0.0",
+                           ">=  1.0.0" `desugarsTo` ">=1.0.0",
+                           ">=   1.0.0" `desugarsTo` ">=1.0.0",
+                           "> 1.0.0" `desugarsTo` ">1.0.0",
+                           ">  1.0.0" `desugarsTo` ">1.0.0",
+                           "<=   2.0.0" `desugarsTo` "<=2.0.0",
+                           "<= 2.0.0" `desugarsTo` "<=2.0.0",
+                           "<=  2.0.0" `desugarsTo` "<=2.0.0",
+                           "<    2.0.0" `desugarsTo` "<2.0.0",
+                           "<\t2.0.0" `desugarsTo` "<2.0.0",
+                           ">=0.1.97" `desugarsTo` ">=0.1.97",
+                           ">=0.1.97" `desugarsTo` ">=0.1.97",
+                           "0.1.20 || 1.2.4" `desugarsTo` "=0.1.20 || =1.2.4",
+                           ">=0.2.3 || <0.0.1" `desugarsTo` ">=0.2.3 || <0.0.1",
+                           ">=0.2.3 || <0.0.1" `desugarsTo` ">=0.2.3 || <0.0.1",
+                           ">=0.2.3 || <0.0.1" `desugarsTo` ">=0.2.3 || <0.0.1",
+                           -- in node-semver this parses to *; we don't due this
+                           -- due to weird edge cases
+                           failsToParse "||",
+                           "2.x.x" `desugarsTo` ">=2.0.0 <3.0.0",
+                           "1.2.x" `desugarsTo` ">=1.2.0 <1.3.0",
+                           "1.2.x || 2.x" `desugarsTo` ">=1.2.0 <1.3.0 || >=2.0.0 <3.0.0",
+                           "x" `desugarsTo` "*",
+                           "2.*.*" `desugarsTo` ">=2.0.0 <3.0.0",
+                           "1.2.*" `desugarsTo` ">=1.2.0 <1.3.0",
+                           "1.2.* || 2.*" `desugarsTo` ">=1.2.0 <1.3.0 || >=2.0.0 <3.0.0",
+                           "*" `desugarsTo` "*",
+                           "2" `desugarsTo` ">=2.0.0 <3.0.0",
+                           "2.3" `desugarsTo` ">=2.3.0 <2.4.0",
+                           "~2.4" `desugarsTo` ">=2.4.0 <2.5.0",
+                           "~2.4" `desugarsTo` ">=2.4.0 <2.5.0",
+                           -- node-semver allows this to mean ">=3.2.1 <3.3.0"
+                           -- but we disallow it because the interpretation of
+                           -- that kind of syntax isn't well defined
+                           failsToParse "~>3.2.1",
+                           "~1" `desugarsTo` ">=1.0.0 <2.0.0",
+                           -- node-semver allows these to mean ">=1.0.0 <2.0.0"
+                           -- but we disallow it because the interpretation of
+                           -- that kind of syntax isn't well defined
+                           failsToParse "~>1",
+                           failsToParse "~> 1",
+                           "~1.0" `desugarsTo` ">=1.0.0 <1.1.0",
+                           "~ 1.0" `desugarsTo` ">=1.0.0 <1.1.0",
+                           "^0" `desugarsTo` ">=0.0.0 <1.0.0",
+                           "^ 1" `desugarsTo` ">=1.0.0 <2.0.0",
+                           "^0.1" `desugarsTo` ">=0.1.0 <0.2.0",
+                           "^1.0" `desugarsTo` ">=1.0.0 <2.0.0",
+                           "^1.2" `desugarsTo` ">=1.2.0 <2.0.0",
+                           "^0.0.1" `desugarsTo` ">=0.0.1 <0.0.2",
+                           "^0.0.1-beta" `desugarsTo` ">=0.0.1-beta <0.0.2",
+                           "^0.1.2" `desugarsTo` ">=0.1.2 <0.2.0",
+                           "^1.2.3" `desugarsTo` ">=1.2.3 <2.0.0",
+                           "^1.2.3-beta.4" `desugarsTo` ">=1.2.3-beta.4 <2.0.0",
+                           "<1" `desugarsTo` "<1.0.0",
+                           "< 1" `desugarsTo` "<1.0.0",
+                           ">=1" `desugarsTo` ">=1.0.0",
+                           ">= 1" `desugarsTo` ">=1.0.0",
+                           "<1.2" `desugarsTo` "<1.2.0",
+                           "< 1.2" `desugarsTo` "<1.2.0",
+                           "1" `desugarsTo` ">=1.0.0 <2.0.0",
+                           -- node-semver rejects this but we accepted it with
+                           -- the previous parser, so we accept it in the new
+                           -- parser too
+                           ">01.02.03" `desugarsTo` ">1.2.3",
+                           failsToParse "~1.2.3beta",
+                           "^ 1.2 ^ 1" `desugarsTo` ">=1.2.0 <2.0.0 >=1.0.0 <2.0.0",
+                           "1.2 - 3.4.5" `desugarsTo` ">=1.2.0 <=3.4.5",
+                           "1.2.3 - 3.4" `desugarsTo` ">=1.2.3 <3.5.0",
+                           "1.2 - 3.4" `desugarsTo` ">=1.2.0 <3.5.0",
+                           ">1" `desugarsTo` ">=2.0.0",
+                           ">1.2" `desugarsTo` ">=1.3.0",
+                           ">X" `desugarsTo` "<0.0.0",
+                           "<X" `desugarsTo` "<0.0.0",
+                           "<x <* || >* 2.x" `desugarsTo` "<0.0.0 <0.0.0 || <0.0.0 >=2.0.0 <3.0.0",
+                           ">x 2.x || * || <x" `desugarsTo` "<0.0.0 >=2.0.0 <3.0.0 || * || <0.0.0",
+                           -- below here are some extra tests not included in the
+                           -- original node-semver test suite
+                           "1.1.1-alpha.1 - 1.1.2-alpha.2"
+                             `desugarsTo` ">=1.1.1-alpha.1 <=1.1.2-alpha.2",
+                           "<=1.1.1-alpha.1" `desugarsTo` "<=1.1.1-alpha.1"
+                         ]
+                 ]
+          ),
         testGroup
           "constraint satisfaction"
           [ testGroup
