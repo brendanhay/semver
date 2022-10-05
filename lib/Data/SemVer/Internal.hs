@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveLift #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -26,6 +28,8 @@ import qualified Data.Attoparsec.Text as Parsec
 import qualified Data.Function as Function
 import Data.Hashable (Hashable)
 import qualified Data.List as List
+import qualified Language.Haskell.TH.Syntax as TH
+import Data.Data (Data)
 import qualified Data.Monoid as Monoid
 import Data.Text (Text)
 import GHC.Generics (Generic)
@@ -46,7 +50,7 @@ data Version = Version
     _versionRelease :: [Identifier],
     _versionMeta :: [Identifier]
   }
-  deriving (Eq, Show, Generic)
+  deriving (Eq, Show, Generic, Data, TH.Lift)
 
 instance Ord Version where
   compare a b = Function.on compare versions a b <> release
@@ -77,7 +81,7 @@ instance Hashable Version
 data Identifier
   = INum !Int
   | IText !Text
-  deriving (Eq, Show, Generic)
+  deriving (Eq, Show, Generic, Data, TH.Lift)
 
 instance Ord Identifier where
   compare a b = case (a, b) of

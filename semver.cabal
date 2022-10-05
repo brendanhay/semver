@@ -41,12 +41,14 @@ library
     Data.SemVer.Constraint
     Data.SemVer.Delimited
     Data.SemVer.Internal
+    Data.SemVer.QQ
 
   build-depends:
-    , attoparsec  >=0.10
-    , deepseq     >=1.4
-    , hashable    >=1.2.5
-    , text        >=0.11
+    , attoparsec       >=0.10
+    , deepseq          >=1.4
+    , hashable         >=1.2.5
+    , text             >=0.11
+    , template-haskell >=2.11.0.0
 
 benchmark bench
   import:         base
