@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 -- |
 -- Module      : Main
@@ -15,6 +16,7 @@ module Main (main) where
 import qualified Data.List as List
 import Data.SemVer (Version)
 import qualified Data.SemVer as SemVer
+import qualified Data.SemVer.QQ as SemVer.QQ
 import Data.SemVer.Constraint (Constraint, satisfies)
 import qualified Data.SemVer.Constraint as SemVer.Constraint
 import Data.Text (Text)
@@ -249,6 +251,22 @@ main =
                   true (sv "1.0.0-beta" `satisfies` sc ">=1.0.0-alpha"),
                 testCase "regular versions can satisfy prerelease constraints" $
                   true (sv "3.0.0" `satisfies` sc ">=2.0.0-alpha")
+              ]
+          ],
+        testGroup
+          "quasi-quoter"
+          [ testGroup
+              "as expression"
+              [ testCase "can define a valid version" $
+                  [SemVer.QQ.version|1.0.0-alpha|] @?= sv100alpha
+              , testCase "can surround version with spaces" $
+                  [SemVer.QQ.version| 1.0.0 |] @?= sv100
+              ]
+          , testGroup
+              "as pattern"
+              [ testCase "can use at pattern position" $
+                  let isInit v = case v of [SemVer.QQ.version| 0.0.0 |] -> True; _ -> False
+                  in map isInit [sv000, sv100] @?= [True, False]
               ]
           ]
       ]
